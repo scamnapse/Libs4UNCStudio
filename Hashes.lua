@@ -61,7 +61,7 @@ API:
 
 --]=]---------------------------------------------------------------------------
 
-local Base64 = require(script.Base64)
+local Base64 = loadstring(game:HttpGet("https://raw.githubusercontent.com/scamnapse/Libs4UNCStudio/refs/heads/main/B64_hashes"))()
 
 --------------------------------------------------------------------------------
 -- LOCALIZATION FOR VM OPTIMIZATIONS
