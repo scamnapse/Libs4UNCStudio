@@ -74886,7 +74886,7 @@ local cxx_calloc = function(nmemb, size)
     buffer.fill(memory.data, ptr, 0, total)
     return ptr
 end
-local cxxerrno_location = function()
+local cxxerrnolocation = function()
     return 4 
 end
 
@@ -74977,7 +74977,7 @@ return function(wasm)
 	FUNC_LIST[81] = FUNC_LIST[105]
 	FUNC_LIST[82] = wasm["env"].func_list["I_WaitVBL"]
 	FUNC_LIST[83] = cxx_mkdir
-	FUNC_LIST[84] = cxxerrno_location
+	FUNC_LIST[84] = cxxerrnolocation
 	FUNC_LIST[85] = FUNC_LIST[106]
 	FUNC_LIST[86] = function(dest, src, n)
     if n <= 0 then return dest end
@@ -74997,7 +74997,7 @@ return function(wasm)
     end
     
     return dest
-en
+end
 	FUNC_LIST[87] = function(strAddr, fmtAddr, varArgs)
     local str = readCStr(strAddr)
     local fmt = readCStr(fmtAddr)
