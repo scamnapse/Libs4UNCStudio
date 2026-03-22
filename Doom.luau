@@ -74837,28 +74837,29 @@ cxx_fs_lib.fwrite = function(ptr, size, nmemb, fileId)
 end
 
 cxx_fs_lib.fflush = function(fileId) return 0 end
-cxx_remove = function(pathAddr)
+local CXX_TAB = {}
+CXX_TAB.cxx_remove = function(pathAddr)
     local path = readCStr(pathAddr)
     print("[DOOM_VFS]: Request to remove " .. path)
     -- Success (0) tells DOOM the file is gone
     return 0 
 end
-cxx_rename = function(oldAddr, newAddr)
+CXX_TAB.cxx_rename = function(oldAddr, newAddr)
     local oldPath = readCStr(oldAddr)
     local newPath = readCStr(newAddr)
     print("[DOOM_VFS]: Renaming " .. oldPath .. " to " .. newPath)
     return 0
 end
-local cxx_vsnprintf = function(strAddr, maxSize, fmtAddr, va_list)
+CXX_TAB.cxx_vsnprintf = function(strAddr, maxSize, fmtAddr, va_list)
     -- Reuse your snprintf logic here, 
     -- passing 'va_list' as the starting offset for arguments.
-    return imports.env.snprintf(strAddr, maxSize, fmtAddr, va_list)
+    return sn_printf(strAddr, maxSize, fmtAddr, va_list)
 end
 
-local cxx_vfprintf = function(filePtr, fmtAddr, va_list)
-    return imports.env.fprintf(filePtr, fmtAddr, va_list)
+CXX_TAB.cxx_vfprintf = function(filePtr, fmtAddr, va_list)
+    return f_printf(filePtr, fmtAddr, va_list)
 end
-local cxx_memchr = function(ptr, char, num)
+CXX_TAB.cxx_memchr = function(ptr, char, num)
     for i = 0, num - 1 do
         if buffer.readu8(memory.data, ptr + i) == char then
             return ptr + i
@@ -74867,32 +74868,32 @@ local cxx_memchr = function(ptr, char, num)
     return 0
 end
 
-local cxx_strdup = function(strAddr)
+CXX_TAB.cxx_strdup = function(strAddr)
     local len = imports.env.strlen(strAddr)
     local newPtr = imports.env.malloc(len + 1)
     buffer.copy(memory.data, newPtr, memory.data, strAddr, len + 1)
     return newPtr
 end
 
-local cxx_strstr = function(haystackAddr, needleAddr)
+CXX_TAB.cxx_strstr = function(haystackAddr, needleAddr)
     local h = readCStr(haystackAddr)
     local n = readCStr(needleAddr)
     local start = h:find(n, 1, true)
     return start and (haystackAddr + start - 1) or 0
 end
-local cxx_calloc = function(nmemb, size)
+CXX_TAB.cxx_calloc = function(nmemb, size)
     local total = nmemb * size
     local ptr = imports.env.malloc(total)
     buffer.fill(memory.data, ptr, 0, total)
     return ptr
 end
-local cxxerrnolocation = function()
+CXX_TAB.cxxerrnolocation = function()
     return 4 
 end
 
-local cxx_system = function(cmdAddr) return -1 end -- Disable 'system' calls for security
-local cxx_mkdir = function(pathAddr) return 0 end
-local amir = function(dest, src, n)
+CXX_TAB.cxx_system = function(cmdAddr) return -1 end -- Disable 'system' calls for security
+CXX_TAB.cxx_mkdir = function(pathAddr) return 0 end
+CXX_TAB.amir = function(dest, src, n)
     if n <= 0 then return dest end
     
     -- Read the source string up to n bytes
@@ -74911,7 +74912,7 @@ local amir = function(dest, src, n)
     
     return dest
 end
-local castle = function(strAddr, fmtAddr, varArgs)
+CXX_TAB.castle = function(strAddr, fmtAddr, varArgs)
     local str = readCStr(strAddr)
     local fmt = readCStr(fmtAddr)
     
@@ -74939,7 +74940,7 @@ local castle = function(strAddr, fmtAddr, varArgs)
     return count
 end
 
-local homebrewchannel = function(s1Addr, s2Addr, n)
+CXX_TAB.homebrewchannel = function(s1Addr, s2Addr, n)
     if n == 0 then return 0 end
     if s1Addr == s2Addr then return 0 end
 
@@ -75027,38 +75028,38 @@ return function(wasm)
 	FUNC_LIST[63] = wasm["env"].func_list["P_ArchiveSpecials"]
 	FUNC_LIST[64] = wasm["env"].func_list["P_WriteSaveGameEOF"]
 	FUNC_LIST[65] = cxx_fs_lib.ftell
-	FUNC_LIST[66] = cxx_remove
-	FUNC_LIST[67] = cxx_rename
+	FUNC_LIST[66] = CXX_TAB.cxx_remove
+	FUNC_LIST[67] = CXX_TAB.cxx_rename
 	FUNC_LIST[68] = wasm["env"].func_list["StatCopy"]
 	FUNC_LIST[69] = wasm["env"].func_list["WI_Start"]
 	FUNC_LIST[70] = wasm["env"].func_list["P_Random"]
 	FUNC_LIST[71] = wasm["env"].func_list["M_ClearRandom"]
 	FUNC_LIST[72] = cxx_fs_lib.fwrite
-	FUNC_LIST[73] = cxx_vfprintf
+	FUNC_LIST[73] = CXX_TAB.cxx_vfprintf
 	FUNC_LIST[74] = cxx_fs_lib.fflush
-	FUNC_LIST[75] = cxx_system
-	FUNC_LIST[76] = cxx_memchr
+	FUNC_LIST[75] = CXX_TAB.cxx_system
+	FUNC_LIST[76] = CXX_TAB.cxx_memchr
 	FUNC_LIST[77] = normal_free
 	FUNC_LIST[78] = wasm["env"].func_list["I_InitInput"]
 	FUNC_LIST[79] = wasm["env"].func_list["I_GetEvent"]
 	FUNC_LIST[80] = wasm["env"].func_list["strrchr"]
 	FUNC_LIST[81] = FUNC_LIST[105]
 	FUNC_LIST[82] = wasm["env"].func_list["I_WaitVBL"]
-	FUNC_LIST[83] = cxx_mkdir
-	FUNC_LIST[84] = cxxerrnolocation
+	FUNC_LIST[83] = CXX_TAB.cxx_mkdir
+	FUNC_LIST[84] = CXX_TAB.cxxerrnolocation
 	FUNC_LIST[85] = FUNC_LIST[106]
-	FUNC_LIST[86] = amir
-	FUNC_LIST[87] = castle
-	FUNC_LIST[88] = cxx_strdup
-	FUNC_LIST[89] = cxx_strstr
-	FUNC_LIST[90] = homebrewchannel
-	FUNC_LIST[91] = cxx_vsnprintf
+	FUNC_LIST[86] = CXX_TAB.amir
+	FUNC_LIST[87] = CXX_TAB.castle
+	FUNC_LIST[88] = CXX_TAB.cxx_strdup
+	FUNC_LIST[89] = CXX_TAB.cxx_strstr
+	FUNC_LIST[90] = CXX_TAB.homebrewchannel
+	FUNC_LIST[91] = CXX_TAB.cxx_vsnprintf
 	FUNC_LIST[92] = wasm["env"].func_list["S_Start"]
 	FUNC_LIST[93] = wasm["env"].func_list["EV_DoPlat"]
 	FUNC_LIST[94] = wasm["env"].func_list["EV_StopPlat"]
 	FUNC_LIST[95] = wasm["env"].func_list["W_OpenFile"]
 	FUNC_LIST[96] = wasm["env"].func_list["W_Read"]
-	FUNC_LIST[97] = cxx_calloc
+	FUNC_LIST[97] = CXX_TAB.cxx_calloc
 	FUNC_LIST[98] = wasm["env"].func_list["D_SuggestGameName"]
 	FUNC_LIST[99] = wasm["env"].func_list["D_GameMissionString"]
 	TABLE_LIST[0] = wasm["env"].table_list["__indirect_function_table"]
