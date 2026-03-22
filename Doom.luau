@@ -147,7 +147,7 @@ local function rt_mul_i64(lhs, rhs)
 	return rt_i64_from_u32(data_1, data_2)
 end
 
-local function rt_bit_bor_i64(lhs, rhs)
+local function rt_bit_or_i64(lhs, rhs)
 	local x = bit32.bor(lhs.X, rhs.X)
 	local y = bit32.bor(lhs.Y, rhs.Y)
 	local z = bit32.bor(lhs.Z, rhs.Z)
