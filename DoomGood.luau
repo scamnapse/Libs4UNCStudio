@@ -74887,7 +74887,7 @@ cxx_calloc = function(nmemb, size)
     return ptr
 end,
 
-__cxxerrno_location = function()
+cxxerrno_location = function()
     -- We'll point this to a safe, unused spot in low memory (e.g., addr 4)
     return 4 
 end
@@ -74979,7 +74979,7 @@ return function(wasm)
 	FUNC_LIST[81] = FUNC_LIST[105]
 	FUNC_LIST[82] = wasm["env"].func_list["I_WaitVBL"]
 	FUNC_LIST[83] = cxx_mkdir
-	FUNC_LIST[84] = __cxxerrno_location
+	FUNC_LIST[84] = cxxerrno_location
 	FUNC_LIST[85] = FUNC_LIST[106]
 	FUNC_LIST[86] = function(dest, src, n)
     if n <= 0 then return dest end
