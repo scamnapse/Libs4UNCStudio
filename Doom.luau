@@ -74667,7 +74667,7 @@ local function f_printf(filePtr, fmtAddr, varArgs)
     end
 
     return #result
-end,
+end
 
 -- Alias fiprintf to fprintf (they are functionally identical for our needs)
 local function fi_printf(f, fmt, args)
