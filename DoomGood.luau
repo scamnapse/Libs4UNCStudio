@@ -74885,7 +74885,7 @@ local cxx_calloc = function(nmemb, size)
     local ptr = imports.env.malloc(total)
     buffer.fill(memory.data, ptr, 0, total)
     return ptr
-end,
+end
 local cxxerrno_location = function()
     return 4 
 end
