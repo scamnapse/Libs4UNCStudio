@@ -74880,15 +74880,13 @@ local cxx_strstr = function(haystackAddr, needleAddr)
     local start = h:find(n, 1, true)
     return start and (haystackAddr + start - 1) or 0
 end
-cxx_calloc = function(nmemb, size)
+local cxx_calloc = function(nmemb, size)
     local total = nmemb * size
     local ptr = imports.env.malloc(total)
     buffer.fill(memory.data, ptr, 0, total)
     return ptr
 end,
-
-cxxerrno_location = function()
-    -- We'll point this to a safe, unused spot in low memory (e.g., addr 4)
+local cxxerrno_location = function()
     return 4 
 end
 
