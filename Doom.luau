@@ -74890,8 +74890,76 @@ local cxxerrnolocation = function()
     return 4 
 end
 
-cxx_system = function(cmdAddr) return -1 end -- Disable 'system' calls for security
-cxx_mkdir = function(pathAddr) return 0 end
+local cxx_system = function(cmdAddr) return -1 end -- Disable 'system' calls for security
+local cxx_mkdir = function(pathAddr) return 0 end
+local amir = function(dest, src, n)
+    if n <= 0 then return dest end
+    
+    -- Read the source string up to n bytes
+    local len = 0
+    while len < n and buffer.readu8(memory.data, src + len) ~= 0 do
+        len = len + 1
+    end
+    
+    -- Copy the actual string content
+    buffer.copy(memory.data, dest, memory.data, src, len)
+    
+    -- C Standard: Pad the rest of the buffer with nulls
+    if len < n then
+        buffer.fill(memory.data, dest + len, 0, n - len)
+    end
+    
+    return dest
+end
+local castle = function(strAddr, fmtAddr, varArgs)
+    local str = readCStr(strAddr)
+    local fmt = readCStr(fmtAddr)
+    
+    -- Simple integer parsing for "%d"
+    if fmt == "%d" then
+        local num = tonumber(str:match("-?%d+"))
+        if num then
+            buffer.writei32(memory.data, varArgs, num)
+            return 1 -- One item matched
+        end
+    end
+    
+    -- Fallback for multiple integers (like "%d %d")
+    local count = 0
+    local argOffset = 0
+    for match in str:gmatch("-?%d+") do
+        local num = tonumber(match)
+        if num then
+            buffer.writei32(memory.data, varArgs + argOffset, num)
+            argOffset = argOffset + 4
+            count = count + 1
+        end
+    end
+    
+    return count
+end
+
+local homebrewchannel = function(s1Addr, s2Addr, n)
+    if n == 0 then return 0 end
+    if s1Addr == s2Addr then return 0 end
+
+    for i = 0, n - 1 do
+        local c1 = buffer.readu8(memory.data, s1Addr + i)
+        local c2 = buffer.readu8(memory.data, s2Addr + i)
+        
+        if c1 ~= c2 then
+            return c1 - c2
+        end
+        
+        -- If we hit a null terminator before 'n', the strings are equal up to here
+        if c1 == 0 then
+            return 0
+        end
+    end
+    
+    return 0
+end
+
 return function(wasm)
 	FUNC_LIST[0] = normal_malloc
 	FUNC_LIST[1] = luau_ms
@@ -74979,74 +75047,11 @@ return function(wasm)
 	FUNC_LIST[83] = cxx_mkdir
 	FUNC_LIST[84] = cxxerrnolocation
 	FUNC_LIST[85] = FUNC_LIST[106]
-	FUNC_LIST[86] = function(dest, src, n)
-    if n <= 0 then return dest end
-    
-    -- Read the source string up to n bytes
-    local len = 0
-    while len < n and buffer.readu8(memory.data, src + len) ~= 0 do
-        len = len + 1
-    end
-    
-    -- Copy the actual string content
-    buffer.copy(memory.data, dest, memory.data, src, len)
-    
-    -- C Standard: Pad the rest of the buffer with nulls
-    if len < n then
-        buffer.fill(memory.data, dest + len, 0, n - len)
-    end
-    
-    return dest
-end
-	FUNC_LIST[87] = function(strAddr, fmtAddr, varArgs)
-    local str = readCStr(strAddr)
-    local fmt = readCStr(fmtAddr)
-    
-    -- Simple integer parsing for "%d"
-    if fmt == "%d" then
-        local num = tonumber(str:match("-?%d+"))
-        if num then
-            buffer.writei32(memory.data, varArgs, num)
-            return 1 -- One item matched
-        end
-    end
-    
-    -- Fallback for multiple integers (like "%d %d")
-    local count = 0
-    local argOffset = 0
-    for match in str:gmatch("-?%d+") do
-        local num = tonumber(match)
-        if num then
-            buffer.writei32(memory.data, varArgs + argOffset, num)
-            argOffset = argOffset + 4
-            count = count + 1
-        end
-    end
-    
-    return count
-end
+	FUNC_LIST[86] = amir
+	FUNC_LIST[87] = castle
 	FUNC_LIST[88] = cxx_strdup
 	FUNC_LIST[89] = cxx_strstr
-	FUNC_LIST[90] = function(s1Addr, s2Addr, n)
-    if n == 0 then return 0 end
-    if s1Addr == s2Addr then return 0 end
-
-    for i = 0, n - 1 do
-        local c1 = buffer.readu8(memory.data, s1Addr + i)
-        local c2 = buffer.readu8(memory.data, s2Addr + i)
-        
-        if c1 ~= c2 then
-            return c1 - c2
-        end
-        
-        -- If we hit a null terminator before 'n', the strings are equal up to here
-        if c1 == 0 then
-            return 0
-        end
-    end
-    
-    return 0
-end
+	FUNC_LIST[90] = homebrewchannel
 	FUNC_LIST[91] = cxx_vsnprintf
 	FUNC_LIST[92] = wasm["env"].func_list["S_Start"]
 	FUNC_LIST[93] = wasm["env"].func_list["EV_DoPlat"]
