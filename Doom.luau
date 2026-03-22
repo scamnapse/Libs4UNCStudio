@@ -2,6 +2,7 @@
 local function no_op(num)
 	return num
 end
+local startTick = os.clock()
 
 local bit_lshift = bit32.lshift
 local bit_rshift = bit32.rshift
@@ -1011,6 +1012,9 @@ local FUNC_LIST = table.create(788)
 local TABLE_LIST = table.create(0)
 local MEMORY_LIST = table.create(0)
 local GLOBAL_LIST = table.create(1217)
+FUNC_LIST[1] = function()
+	return (os.clock() - startTick) * 1000
+end
 FUNC_LIST[100] = function()
 	while true do
 		break
