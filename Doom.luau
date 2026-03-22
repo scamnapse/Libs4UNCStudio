@@ -74587,11 +74587,318 @@ local curr = os.clock()
 local function luau_ms()
 	return (os.clock() - curr) * 1000
 end
+local function sn_printf(strAddr, maxSize, fmtAddr, varArgs)
+    -- 1. Helper to read null-terminated strings from Wasm memory
+    local function readCStr(addr)
+        local s = ""
+        while true do
+            local b = buffer.readu8(memory.data, addr)
+            if b == 0 then break end
+            s = s .. string.char(b)
+            addr = addr + 1
+        end
+        return s
+    end
+
+    local fmt = readCStr(fmtAddr)
+    
+    -- 2. Simple Variadic Parser (Handles %d and %s)
+    -- We look for % tokens and pull the values from the varArgs stack pointer
+    local argOffset = 0
+    local result = fmt:gsub("%%([ds])", function(type)
+        local val
+        local ptr = varArgs + argOffset
+        if type == "d" then
+            val = buffer.readi32(memory.data, ptr)
+            argOffset = argOffset + 4
+        elseif type == "s" then
+            local sAddr = buffer.readi32(memory.data, ptr)
+            val = readCStr(sAddr)
+            argOffset = argOffset + 4
+        end
+        return tostring(val)
+    end)
+
+    -- 3. Write back to Wasm memory
+    local finalStr = result:sub(1, maxSize - 1)
+    for i = 1, #finalStr do
+        buffer.writeu8(memory.data, strAddr + i - 1, string.byte(finalStr, i))
+    end
+    buffer.writeu8(memory.data, strAddr + #finalStr, 0) -- Null terminator
+
+    return #finalStr
+end
+local function f_printf(filePtr, fmtAddr, varArgs)
+    -- 1. Helper to read null-terminated strings (Same as snprintf)
+    local function readCStr(addr)
+        local s = ""
+        while true do
+            local b = buffer.readu8(memory.data, addr)
+            if b == 0 then break end
+            s = s .. string.char(b)
+            addr = addr + 1
+        end
+        return s
+    end
+
+    local fmt = readCStr(fmtAddr)
+    
+    -- 2. Variadic Parser
+    local argOffset = 0
+    local result = fmt:gsub("%%([ds])", function(type)
+        local val
+        local ptr = varArgs + argOffset
+        if type == "d" then
+            val = buffer.readi32(memory.data, ptr)
+            argOffset = argOffset + 4
+        elseif type == "s" then
+            local sAddr = buffer.readi32(memory.data, ptr)
+            val = readCStr(sAddr)
+            argOffset = argOffset + 4
+        end
+        return tostring(val)
+    end)
+
+    -- 3. Redirect to Roblox Console
+    if filePtr == 2 then
+        warn("[DOOM_STDERR]: " .. result)
+    else
+        print("[DOOM_STDOUT]: " .. result)
+    end
+
+    return #result
+end,
+
+-- Alias fiprintf to fprintf (they are functionally identical for our needs)
+local function fi_printf(f, fmt, args)
+    return f_printf(f, fmt, args)
+end
+local function put_s(strAddr)
+    if strAddr == 0 then return 0 end
+    
+    local s = ""
+    local curr = strAddr
+    while true do
+        local b = buffer.readu8(memory.data, curr)
+        if b == 0 then break end
+        s = s .. string.char(b)
+        curr = curr + 1
+        
+        -- Safety break to prevent infinite loops if memory is corrupted
+        if curr - strAddr > 1024 then break end 
+    end
+    
+    print("[DOOM]: " .. s)
+    return 0
+end
+-- Helper to read strings (cached for speed)
+local function readCStr(addr)
+    local len = 0
+    while buffer.readu8(memory.data, addr + len) ~= 0 do
+        len += 1
+    end
+    return buffer.readstring(memory.data, addr, len)
+end
+
+-- strcasecmp: Compare two strings ignoring case
+local str_casecmp = function(s1Addr, s2Addr)
+    local s1 = readCStr(s1Addr):lower()
+    local s2 = readCStr(s2Addr):lower()
+    if s1 == s2 then return 0 end
+    return s1 < s2 and -1 or 1
+end
+
+-- strncasecmp: Compare up to 'n' characters ignoring case
+local str_ncasecmp = function(s1Addr, s2Addr, n)
+    local s1 = readCStr(s1Addr):sub(1, n):lower()
+    local s2 = readCStr(s2Addr):sub(1, n):lower()
+    if s1 == s2 then return 0 end
+    return s1 < s2 and -1 or 1
+end
+local i_printf = function(fmtAddr, varArgs)
+    -- Use the same logic from your fprintf/snprintf
+    -- but directed to stdout (print)
+    return imports.env.fprintf(1, fmtAddr, varArgs)
+end
+local a_to_i = function(strAddr)
+    if strAddr == 0 then return 0 end
+    
+    -- 1. Helper to read the C-string from memory
+    local len = 0
+    while buffer.readu8(memory.data, strAddr + len) ~= 0 do
+        len = len + 1
+    end
+    local str = buffer.readstring(memory.data, strAddr, len)
+    
+    -- 2. Convert to number, or default to 0 (Standard C behavior)
+    return tonumber(str) or 0
+end
+local str_cmp = function(s1Addr, s2Addr)
+    if s1Addr == s2Addr then return 0 end
+    if s1Addr == 0 then return -1 end
+    if s2Addr == 0 then return 1 end
+
+    -- Helper to read strings efficiently
+    local function readCStr(addr)
+        local len = 0
+        while buffer.readu8(memory.data, addr + len) ~= 0 do
+            len = len + 1
+        end
+        return buffer.readstring(memory.data, addr, len)
+    end
+
+    local s1 = readCStr(s1Addr)
+    local s2 = readCStr(s2Addr)
+
+    if s1 == s3 then return 0 end
+    return s1 < s2 and -1 or 1
+end
+local c_exit = function(status)
+    print("[DOOM]: Exit called with status " .. tostring(status))
+    
+    -- 1. Call your Cleanup function (if you have one)
+    if _G.CleanupDoom then
+        _G.CleanupDoom()
+    end
+    
+    -- 2. Terminate the execution
+    error("DOOM Exited (Status: " .. tostring(status) .. ")")
+end
+local stdoutBuffer = ""
+local put_char = function(c)
+    local char = string.char(c)
+    if char == "\n" then
+        print("[DOOM]: " .. stdoutBuffer)
+        stdoutBuffer = ""
+    else
+        stdoutBuffer = stdoutBuffer .. char
+    end
+    return c
+end
+local str_len = function(strAddr)
+    if strAddr == 0 then return 0 end
+    local len = 0
+    while buffer.readu8(memory.data, strAddr + len) ~= 0 do
+        len = len + 1
+    end
+    return len
+end
+local cxx_upper = function(c)
+    -- Only convert if it's a lowercase letter (a-z are 97-122)
+    if c >= 97 and c <= 122 then
+        return c - 32
+    end
+    return c
+end
+local cxx_fs_lib = {}
+local openFiles = {}
+local nextFileId = 100
+
+cxx_fs_lib.fopen = function(pathAddr, modeAddr)
+    local path = readCStr(pathAddr)
+    local mode = readCStr(modeAddr)
+    
+    print("[DOOM_VFS]: Attempting to open " .. path .. " with mode " .. mode)
+
+    -- 1. Check if the engine is looking for the WAD
+    if path:lower():find("doom.wad") or path:lower():find("doom1.wad") then
+        local id = nextFileId
+        openFiles[id] = { name = path, pos = 0, type = "WAD" }
+        nextFileId += 1
+        return id
+    end
+
+    -- 2. If it's a Save Game or Config, we can stub it for now
+    -- Returning 0 (NULL) tells DOOM "File not found"
+    return 0 
+end
+
+cxx_fs_lib.fclose = function(fileId)
+    if openFiles[fileId] then
+        print("[DOOM_VFS]: Closing " .. openFiles[fileId].name)
+        openFiles[fileId] = nil
+        return 0
+    end
+    return -1 -- EOF/Error
+end
+cxx_fs_lib.ftell = function(fileId)
+    local file = openFiles[fileId]
+    if file then
+        return file.pos -- Returns the current byte offset we've tracked
+    end
+    return -1 -- Error/EOF
+end
+cxx_fs_lib.fwrite = function(ptr, size, nmemb, fileId)
+    -- DOOM usually calls this for savegames or stderr
+    if fileId <= 2 then -- stdout/stderr redirect
+        return imports.env.fprintf(fileId, ptr, 0) 
+    end
+    return nmemb -- Stub success for savegames
+end
+
+cxx_fs_lib.fflush = function(fileId) return 0 end
+cxx_remove = function(pathAddr)
+    local path = readCStr(pathAddr)
+    print("[DOOM_VFS]: Request to remove " .. path)
+    -- Success (0) tells DOOM the file is gone
+    return 0 
+end
+cxx_rename = function(oldAddr, newAddr)
+    local oldPath = readCStr(oldAddr)
+    local newPath = readCStr(newAddr)
+    print("[DOOM_VFS]: Renaming " .. oldPath .. " to " .. newPath)
+    return 0
+end
+local cxx_vsnprintf = function(strAddr, maxSize, fmtAddr, va_list)
+    -- Reuse your snprintf logic here, 
+    -- passing 'va_list' as the starting offset for arguments.
+    return imports.env.snprintf(strAddr, maxSize, fmtAddr, va_list)
+end
+
+local cxx_vfprintf = function(filePtr, fmtAddr, va_list)
+    return imports.env.fprintf(filePtr, fmtAddr, va_list)
+end
+local cxx_memchr = function(ptr, char, num)
+    for i = 0, num - 1 do
+        if buffer.readu8(memory.data, ptr + i) == char then
+            return ptr + i
+        end
+    end
+    return 0
+end
+
+local cxx_strdup = function(strAddr)
+    local len = imports.env.strlen(strAddr)
+    local newPtr = imports.env.malloc(len + 1)
+    buffer.copy(memory.data, newPtr, memory.data, strAddr, len + 1)
+    return newPtr
+end
+
+local cxx_strstr = function(haystackAddr, needleAddr)
+    local h = readCStr(haystackAddr)
+    local n = readCStr(needleAddr)
+    local start = h:find(n, 1, true)
+    return start and (haystackAddr + start - 1) or 0
+end
+cxx_calloc = function(nmemb, size)
+    local total = nmemb * size
+    local ptr = imports.env.malloc(total)
+    buffer.fill(memory.data, ptr, 0, total)
+    return ptr
+end,
+
+__cxxerrno_location = function()
+    -- We'll point this to a safe, unused spot in low memory (e.g., addr 4)
+    return 4 
+end
+
+cxx_system = function(cmdAddr) return -1 end -- Disable 'system' calls for security
+cxx_mkdir = function(pathAddr) return 0 end
 return function(wasm)
 	FUNC_LIST[0] = normal_malloc
 	FUNC_LIST[1] = luau_ms
-	FUNC_LIST[2] = wasm["env"].func_list["snprintf"]
-	FUNC_LIST[3] = wasm["env"].func_list["fiprintf"]
+	FUNC_LIST[2] = sn_printf
+	FUNC_LIST[3] = fi_printf
 	FUNC_LIST[4] = wasm["env"].func_list["D_PopEvent"]
 	FUNC_LIST[5] = wasm["env"].func_list["WI_Drawer"]
 	FUNC_LIST[6] = wasm["env"].func_list["NetUpdate"]
@@ -74607,18 +74914,18 @@ return function(wasm)
 	FUNC_LIST[16] = wasm["env"].func_list["M_BindChatControls"]
 	FUNC_LIST[17] = wasm["env"].func_list["M_BindVariable"]
 	FUNC_LIST[18] = wasm["env"].func_list["TryRunTics"]
-	FUNC_LIST[19] = wasm["env"].func_list["puts"]
+	FUNC_LIST[19] = put_s
 	FUNC_LIST[20] = wasm["env"].func_list["D_StartGameLoop"]
 	FUNC_LIST[21] = wasm["env"].func_list["S_StartMusic"]
-	FUNC_LIST[22] = wasm["env"].func_list["strcasecmp"]
-	FUNC_LIST[23] = wasm["env"].func_list["strncasecmp"]
-	FUNC_LIST[24] = wasm["env"].func_list["iprintf"]
+	FUNC_LIST[22] = str_casecmp
+	FUNC_LIST[23] = str_ncasecmp
+	FUNC_LIST[24] = i_printf
 	FUNC_LIST[25] = wasm["env"].func_list["M_SetConfigDir"]
-	FUNC_LIST[26] = wasm["env"].func_list["atoi"]
+	FUNC_LIST[26] = a_to_i
 	FUNC_LIST[27] = wasm["env"].func_list["M_SetConfigFilenames"]
 	FUNC_LIST[28] = wasm["env"].func_list["M_LoadDefaults"]
 	FUNC_LIST[29] = wasm["env"].func_list["D_FindIWAD"]
-	FUNC_LIST[30] = wasm["env"].func_list["strcmp"]
+	FUNC_LIST[30] = str_cmp
 	FUNC_LIST[31] = wasm["env"].func_list["W_ParseCommandLine"]
 	FUNC_LIST[32] = wasm["env"].func_list["D_SaveGameIWADName"]
 	FUNC_LIST[33] = wasm["env"].func_list["M_GetSaveGameDir"]
@@ -74626,21 +74933,21 @@ return function(wasm)
 	FUNC_LIST[35] = wasm["env"].func_list["I_InitJoystick"]
 	FUNC_LIST[36] = wasm["env"].func_list["P_SaveGameFile"]
 	FUNC_LIST[37] = wasm["env"].func_list["I_Endoom"]
-	FUNC_LIST[38] = wasm["env"].func_list["exit"]
+	FUNC_LIST[38] = c_exit
 	FUNC_LIST[39] = wasm["env"].func_list["W_Checksum"]
 	FUNC_LIST[40] = wasm["env"].func_list["D_InitNetGame"]
 	FUNC_LIST[41] = wasm["env"].func_list["D_RegisterLoopCallbacks"]
 	FUNC_LIST[42] = wasm["env"].func_list["D_StartNetGame"]
-	FUNC_LIST[43] = wasm["env"].func_list["putchar"]
+	FUNC_LIST[43] = put_char
 	FUNC_LIST[44] = wasm["env"].func_list["S_ChangeMusic"]
-	FUNC_LIST[45] = wasm["env"].func_list["strlen"]
-	FUNC_LIST[46] = wasm["env"].func_list["toupper"]
+	FUNC_LIST[45] = str_len
+	FUNC_LIST[46] = cxx_upper
 	FUNC_LIST[47] = wasm["env"].func_list["M_Random"]
 	FUNC_LIST[48] = wasm["env"].func_list["WI_End"]
 	FUNC_LIST[49] = wasm["env"].func_list["WI_Ticker"]
-	FUNC_LIST[50] = wasm["env"].func_list["fopen"]
+	FUNC_LIST[50] = FUNC_LIST[104]
 	FUNC_LIST[51] = wasm["env"].func_list["P_ReadSaveGameHeader"]
-	FUNC_LIST[52] = wasm["env"].func_list["fclose"]
+	FUNC_LIST[52] = FUNC_LIST[108]
 	FUNC_LIST[53] = wasm["env"].func_list["P_UnArchivePlayers"]
 	FUNC_LIST[54] = wasm["env"].func_list["P_UnArchiveWorld"]
 	FUNC_LIST[55] = wasm["env"].func_list["P_UnArchiveThinkers"]
@@ -74653,39 +74960,102 @@ return function(wasm)
 	FUNC_LIST[62] = wasm["env"].func_list["P_ArchiveThinkers"]
 	FUNC_LIST[63] = wasm["env"].func_list["P_ArchiveSpecials"]
 	FUNC_LIST[64] = wasm["env"].func_list["P_WriteSaveGameEOF"]
-	FUNC_LIST[65] = wasm["env"].func_list["ftell"]
-	FUNC_LIST[66] = wasm["env"].func_list["remove"]
-	FUNC_LIST[67] = wasm["env"].func_list["rename"]
+	FUNC_LIST[65] = cxx_fs_lib.ftell
+	FUNC_LIST[66] = cxx_remove
+	FUNC_LIST[67] = cxx_rename
 	FUNC_LIST[68] = wasm["env"].func_list["StatCopy"]
 	FUNC_LIST[69] = wasm["env"].func_list["WI_Start"]
 	FUNC_LIST[70] = wasm["env"].func_list["P_Random"]
 	FUNC_LIST[71] = wasm["env"].func_list["M_ClearRandom"]
-	FUNC_LIST[72] = wasm["env"].func_list["fwrite"]
-	FUNC_LIST[73] = wasm["env"].func_list["vfprintf"]
-	FUNC_LIST[74] = wasm["env"].func_list["fflush"]
-	FUNC_LIST[75] = wasm["env"].func_list["system"]
-	FUNC_LIST[76] = wasm["env"].func_list["memchr"]
+	FUNC_LIST[72] = cxx_fs_lib.fwrite
+	FUNC_LIST[73] = cxx_vfprintf
+	FUNC_LIST[74] = cxx_fs_lib.fflush
+	FUNC_LIST[75] = cxx_system
+	FUNC_LIST[76] = cxx_memchr
 	FUNC_LIST[77] = normal_free
 	FUNC_LIST[78] = wasm["env"].func_list["I_InitInput"]
 	FUNC_LIST[79] = wasm["env"].func_list["I_GetEvent"]
 	FUNC_LIST[80] = wasm["env"].func_list["strrchr"]
-	FUNC_LIST[81] = wasm["env"].func_list["fread"]
+	FUNC_LIST[81] = FUNC_LIST[105]
 	FUNC_LIST[82] = wasm["env"].func_list["I_WaitVBL"]
-	FUNC_LIST[83] = wasm["env"].func_list["mkdir"]
-	FUNC_LIST[84] = wasm["env"].func_list["__errno_location"]
-	FUNC_LIST[85] = wasm["env"].func_list["fseek"]
-	FUNC_LIST[86] = wasm["env"].func_list["strncpy"]
-	FUNC_LIST[87] = wasm["env"].func_list["sscanf"]
-	FUNC_LIST[88] = wasm["env"].func_list["strdup"]
-	FUNC_LIST[89] = wasm["env"].func_list["strstr"]
-	FUNC_LIST[90] = wasm["env"].func_list["strncmp"]
-	FUNC_LIST[91] = wasm["env"].func_list["vsnprintf"]
+	FUNC_LIST[83] = cxx_mkdir
+	FUNC_LIST[84] = __cxxerrno_location
+	FUNC_LIST[85] = FUNC_LIST[106]
+	FUNC_LIST[86] = function(dest, src, n)
+    if n <= 0 then return dest end
+    
+    -- Read the source string up to n bytes
+    local len = 0
+    while len < n and buffer.readu8(memory.data, src + len) ~= 0 do
+        len = len + 1
+    end
+    
+    -- Copy the actual string content
+    buffer.copy(memory.data, dest, memory.data, src, len)
+    
+    -- C Standard: Pad the rest of the buffer with nulls
+    if len < n then
+        buffer.fill(memory.data, dest + len, 0, n - len)
+    end
+    
+    return dest
+en
+	FUNC_LIST[87] = function(strAddr, fmtAddr, varArgs)
+    local str = readCStr(strAddr)
+    local fmt = readCStr(fmtAddr)
+    
+    -- Simple integer parsing for "%d"
+    if fmt == "%d" then
+        local num = tonumber(str:match("-?%d+"))
+        if num then
+            buffer.writei32(memory.data, varArgs, num)
+            return 1 -- One item matched
+        end
+    end
+    
+    -- Fallback for multiple integers (like "%d %d")
+    local count = 0
+    local argOffset = 0
+    for match in str:gmatch("-?%d+") do
+        local num = tonumber(match)
+        if num then
+            buffer.writei32(memory.data, varArgs + argOffset, num)
+            argOffset = argOffset + 4
+            count = count + 1
+        end
+    end
+    
+    return count
+end
+	FUNC_LIST[88] = cxx_strdup
+	FUNC_LIST[89] = cxx_strstr
+	FUNC_LIST[90] = function(s1Addr, s2Addr, n)
+    if n == 0 then return 0 end
+    if s1Addr == s2Addr then return 0 end
+
+    for i = 0, n - 1 do
+        local c1 = buffer.readu8(memory.data, s1Addr + i)
+        local c2 = buffer.readu8(memory.data, s2Addr + i)
+        
+        if c1 ~= c2 then
+            return c1 - c2
+        end
+        
+        -- If we hit a null terminator before 'n', the strings are equal up to here
+        if c1 == 0 then
+            return 0
+        end
+    end
+    
+    return 0
+end
+	FUNC_LIST[91] = cxx_vsnprintf
 	FUNC_LIST[92] = wasm["env"].func_list["S_Start"]
 	FUNC_LIST[93] = wasm["env"].func_list["EV_DoPlat"]
 	FUNC_LIST[94] = wasm["env"].func_list["EV_StopPlat"]
 	FUNC_LIST[95] = wasm["env"].func_list["W_OpenFile"]
 	FUNC_LIST[96] = wasm["env"].func_list["W_Read"]
-	FUNC_LIST[97] = wasm["env"].func_list["calloc"]
+	FUNC_LIST[97] = cxx_calloc
 	FUNC_LIST[98] = wasm["env"].func_list["D_SuggestGameName"]
 	FUNC_LIST[99] = wasm["env"].func_list["D_GameMissionString"]
 	TABLE_LIST[0] = wasm["env"].table_list["__indirect_function_table"]
