@@ -2,329 +2,6 @@
 local function no_op(num)
 	return num
 end
-local zmalloc = function(loc_0, loc_1, loc_2)
-	local loc_3 = 0
-	local loc_4 = 0
-	local loc_5 = 0
-	local loc_6 = 0
-	local loc_7 = 0
-	local loc_8 = 0
-	local loc_9 = 0
-	local reg_0
-	local desired
-	while true do
-		loc_3 = rt_sub_i32(GLOBAL_LIST[0].value, 16)
-		GLOBAL_LIST[0].value = loc_3
-		loc_4 = rt_add_i32(bit_and(rt_add_i32(loc_0, 3), 4294967292), 24)
-		loc_0 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[718].value) + 28)
-		loc_5 = rt_load_i32(memory_at_0, loc_0 + 20)
-		loc_0 = (if rt_load_i32(memory_at_0, loc_5 + 8) == 4 then loc_5 else loc_0)
-		loc_6 = rt_load_i32(memory_at_0, loc_0 + 20)
-		loc_5 = loc_0
-		while true do
-			while true do
-				if loc_0 ~= loc_6 then
-					break
-				end
-				rt_store_i32(memory_at_0, loc_3, loc_4)
-				FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 1873), loc_3)
-				break
-			end
-			if desired then
-				if desired == 1 then
-					desired = nil
-					continue
-				end
-				break
-			end
-			while true do
-				while true do
-					loc_7 = rt_load_i32(memory_at_0, loc_0 + 8)
-					if loc_7 == 4 then
-						break
-					end
-					while true do
-						if rt_gt_i32(loc_7, 6) then
-							break
-						end
-						loc_0 = rt_load_i32(memory_at_0, loc_0 + 16)
-						loc_5 = loc_0
-						desired = 2
-						break
-					end
-					if desired then
-						if desired == 3 then
-							desired = nil
-						end
-						break
-					end
-					loc_8 = rt_load_i32(memory_at_0, loc_5 + 20)
-					while true do
-						while true do
-							if rt_load_i32(memory_at_0, loc_0 + 12) == 1919505 then
-								break
-							end
-							FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 8195), 0)
-							if rt_load_i32(memory_at_0, loc_0 + 8) == 4 then
-								desired = 4
-								break
-							end
-							break
-						end
-						if desired then
-							if desired == 4 then
-								desired = nil
-							end
-							break
-						end
-						loc_5 = rt_load_i32(memory_at_0, loc_0 + 4)
-						if loc_5 == 0 then
-							break
-						end
-						rt_store_i32(memory_at_0, loc_5, 0)
-						break
-					end
-					if desired then
-						if desired == 3 then
-							desired = nil
-						end
-						break
-					end
-					rt_store_i32(memory_at_0, loc_0 + 12, 0)
-					rt_store_i64(memory_at_0, loc_0 + 4, rt_i64_from_u32(0, 4))
-					while true do
-						while true do
-							loc_7 = rt_load_i32(memory_at_0, loc_0 + 20)
-							if rt_load_i32(memory_at_0, loc_7 + 8) == 4 then
-								break
-							end
-							loc_5 = rt_load_i32(memory_at_0, loc_0 + 16)
-							desired = 4
-							break
-						end
-						if desired then
-							if desired == 4 then
-								desired = nil
-							end
-							break
-						end
-						rt_store_i32(memory_at_0, loc_7, rt_add_i32(rt_load_i32(memory_at_0, loc_7), rt_load_i32(memory_at_0, loc_0)))
-						loc_5 = rt_load_i32(memory_at_0, loc_0 + 16)
-						rt_store_i32(memory_at_0, loc_7 + 16, loc_5)
-						rt_store_i32(memory_at_0, loc_5 + 20, loc_7)
-						while true do
-							loc_9 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
-							if loc_0 ~= rt_load_i32(memory_at_0, loc_9 + 28) then
-								break
-							end
-							rt_store_i32(memory_at_0, loc_9 + 28, loc_7)
-							break
-						end
-						if desired then
-							if desired == 4 then
-								desired = nil
-							end
-							break
-						end
-						loc_0 = loc_7
-						break
-					end
-					if desired then
-						if desired == 3 then
-							desired = nil
-						end
-						break
-					end
-					while true do
-						if rt_load_i32(memory_at_0, loc_5 + 8) ~= 4 then
-							break
-						end
-						rt_store_i32(memory_at_0, loc_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0), rt_load_i32(memory_at_0, loc_5)))
-						loc_7 = rt_load_i32(memory_at_0, loc_5 + 16)
-						rt_store_i32(memory_at_0, loc_0 + 16, loc_7)
-						rt_store_i32(memory_at_0, loc_7 + 20, loc_0)
-						loc_7 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
-						if loc_5 ~= rt_load_i32(memory_at_0, loc_7 + 28) then
-							break
-						end
-						rt_store_i32(memory_at_0, loc_7 + 28, loc_0)
-						break
-					end
-					if desired then
-						if desired == 3 then
-							desired = nil
-						end
-						break
-					end
-					loc_5 = rt_load_i32(memory_at_0, loc_8 + 16)
-					loc_0 = rt_load_i32(memory_at_0, loc_5 + 16)
-					desired = 2
-					break
-				end
-				if desired then
-					if desired == 2 then
-						desired = nil
-					end
-					break
-				end
-				loc_0 = rt_load_i32(memory_at_0, loc_0 + 16)
-				break
-			end
-			if desired then
-				if desired == 1 then
-					desired = nil
-					continue
-				end
-				break
-			end
-			if rt_load_i32(memory_at_0, loc_5 + 8) ~= 4 then
-				continue
-			end
-			loc_7 = rt_load_i32(memory_at_0, loc_5)
-			if rt_lt_i32(loc_7, loc_4) then
-				continue
-			end
-			break
-		end
-		while true do
-			loc_7 = rt_sub_i32(loc_7, loc_4)
-			if rt_lt_i32(loc_7, 65) then
-				break
-			end
-			loc_0 = rt_add_i32(loc_5, loc_4)
-			rt_store_i32(memory_at_0, loc_0, loc_7)
-			rt_store_i32(memory_at_0, loc_0 + 20, loc_5)
-			rt_store_i64(memory_at_0, loc_0 + 4, rt_i64_from_u32(0, 4))
-			loc_7 = rt_load_i32(memory_at_0, loc_5 + 16)
-			rt_store_i32(memory_at_0, loc_0 + 16, loc_7)
-			rt_store_i32(memory_at_0, loc_7 + 20, loc_0)
-			rt_store_i32(memory_at_0, loc_5, loc_4)
-			rt_store_i32(memory_at_0, loc_5 + 16, loc_0)
-			break
-		end
-		while true do
-			while true do
-				if rt_lt_i32(loc_1, 7) then
-					break
-				end
-				if loc_2 ~= 0 then
-					break
-				end
-				FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 1759), 0)
-				rt_store_i32(memory_at_0, loc_5 + 8, loc_1)
-				rt_store_i32(memory_at_0, loc_5 + 4, 0)
-				loc_0 = rt_add_i32(loc_5, 24)
-				desired = 1
-				break
-			end
-			if desired then
-				if desired == 1 then
-					desired = nil
-				end
-				break
-			end
-			rt_store_i32(memory_at_0, loc_5 + 8, loc_1)
-			rt_store_i32(memory_at_0, loc_5 + 4, loc_2)
-			loc_0 = rt_add_i32(loc_5, 24)
-			if loc_2 == 0 then
-				break
-			end
-			rt_store_i32(memory_at_0, loc_2, loc_0)
-			break
-		end
-		rt_store_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[718].value) + 28, rt_load_i32(memory_at_0, loc_5 + 16))
-		rt_store_i32(memory_at_0, loc_5 + 12, 1919505)
-		GLOBAL_LIST[0].value = rt_add_i32(loc_3, 16)
-		reg_0 = loc_0
-		break
-	end
-	return reg_0
-end
-local zfree = function(loc_0)
-	local loc_1 = 0
-	local loc_2 = 0
-	local loc_3 = 0
-	local desired
-	while true do
-		while true do
-			loc_1 = rt_add_i32(loc_0, 4294967284)
-			if rt_load_i32(memory_at_0, loc_1) == 1919505 then
-				break
-			end
-			FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 8195), 0)
-			break
-		end
-		while true do
-			loc_2 = rt_add_i32(loc_0, 4294967280)
-			if rt_load_i32(memory_at_0, loc_2) == 4 then
-				break
-			end
-			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967276))
-			if loc_3 == 0 then
-				break
-			end
-			rt_store_i32(memory_at_0, loc_3, 0)
-			break
-		end
-		loc_3 = rt_add_i32(loc_0, 4294967272)
-		rt_store_i32(memory_at_0, loc_2, 4)
-		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 4294967276), 0)
-		rt_store_i32(memory_at_0, loc_1, 0)
-		while true do
-			while true do
-				loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967292))
-				if rt_load_i32(memory_at_0, loc_1 + 8) == 4 then
-					break
-				end
-				loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967288))
-				desired = 1
-				break
-			end
-			if desired then
-				if desired == 1 then
-					desired = nil
-				end
-				break
-			end
-			rt_store_i32(memory_at_0, loc_1, rt_add_i32(rt_load_i32(memory_at_0, loc_1), rt_load_i32(memory_at_0, loc_3)))
-			loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967288))
-			rt_store_i32(memory_at_0, loc_1 + 16, loc_0)
-			rt_store_i32(memory_at_0, loc_0 + 20, loc_1)
-			while true do
-				loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
-				if loc_3 ~= rt_load_i32(memory_at_0, loc_2 + 28) then
-					break
-				end
-				rt_store_i32(memory_at_0, loc_2 + 28, loc_1)
-				break
-			end
-			if desired then
-				if desired == 1 then
-					desired = nil
-				end
-				break
-			end
-			loc_3 = loc_1
-			break
-		end
-		while true do
-			if rt_load_i32(memory_at_0, loc_0 + 8) ~= 4 then
-				break
-			end
-			rt_store_i32(memory_at_0, loc_3, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_load_i32(memory_at_0, loc_0)))
-			loc_1 = rt_load_i32(memory_at_0, loc_0 + 16)
-			rt_store_i32(memory_at_0, loc_3 + 16, loc_1)
-			rt_store_i32(memory_at_0, loc_1 + 20, loc_3)
-			loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
-			if loc_0 ~= rt_load_i32(memory_at_0, loc_1 + 28) then
-				break
-			end
-			rt_store_i32(memory_at_0, loc_1 + 28, loc_3)
-			break
-		end
-		break
-	end
-end
 local bit_lshift = bit32.lshift
 local bit_rshift = bit32.rshift
 local bit_arshift = bit32.arshift
@@ -1326,6 +1003,329 @@ local function rt_allocator_grow(memory, num)
 		return old
 	else
 		return 0xFFFFFFFF
+	end
+end
+local zmalloc = function(loc_0, loc_1, loc_2)
+	local loc_3 = 0
+	local loc_4 = 0
+	local loc_5 = 0
+	local loc_6 = 0
+	local loc_7 = 0
+	local loc_8 = 0
+	local loc_9 = 0
+	local reg_0
+	local desired
+	while true do
+		loc_3 = rt_sub_i32(GLOBAL_LIST[0].value, 16)
+		GLOBAL_LIST[0].value = loc_3
+		loc_4 = rt_add_i32(bit_and(rt_add_i32(loc_0, 3), 4294967292), 24)
+		loc_0 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[718].value) + 28)
+		loc_5 = rt_load_i32(memory_at_0, loc_0 + 20)
+		loc_0 = (if rt_load_i32(memory_at_0, loc_5 + 8) == 4 then loc_5 else loc_0)
+		loc_6 = rt_load_i32(memory_at_0, loc_0 + 20)
+		loc_5 = loc_0
+		while true do
+			while true do
+				if loc_0 ~= loc_6 then
+					break
+				end
+				rt_store_i32(memory_at_0, loc_3, loc_4)
+				FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 1873), loc_3)
+				break
+			end
+			if desired then
+				if desired == 1 then
+					desired = nil
+					continue
+				end
+				break
+			end
+			while true do
+				while true do
+					loc_7 = rt_load_i32(memory_at_0, loc_0 + 8)
+					if loc_7 == 4 then
+						break
+					end
+					while true do
+						if rt_gt_i32(loc_7, 6) then
+							break
+						end
+						loc_0 = rt_load_i32(memory_at_0, loc_0 + 16)
+						loc_5 = loc_0
+						desired = 2
+						break
+					end
+					if desired then
+						if desired == 3 then
+							desired = nil
+						end
+						break
+					end
+					loc_8 = rt_load_i32(memory_at_0, loc_5 + 20)
+					while true do
+						while true do
+							if rt_load_i32(memory_at_0, loc_0 + 12) == 1919505 then
+								break
+							end
+							FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 8195), 0)
+							if rt_load_i32(memory_at_0, loc_0 + 8) == 4 then
+								desired = 4
+								break
+							end
+							break
+						end
+						if desired then
+							if desired == 4 then
+								desired = nil
+							end
+							break
+						end
+						loc_5 = rt_load_i32(memory_at_0, loc_0 + 4)
+						if loc_5 == 0 then
+							break
+						end
+						rt_store_i32(memory_at_0, loc_5, 0)
+						break
+					end
+					if desired then
+						if desired == 3 then
+							desired = nil
+						end
+						break
+					end
+					rt_store_i32(memory_at_0, loc_0 + 12, 0)
+					rt_store_i64(memory_at_0, loc_0 + 4, rt_i64_from_u32(0, 4))
+					while true do
+						while true do
+							loc_7 = rt_load_i32(memory_at_0, loc_0 + 20)
+							if rt_load_i32(memory_at_0, loc_7 + 8) == 4 then
+								break
+							end
+							loc_5 = rt_load_i32(memory_at_0, loc_0 + 16)
+							desired = 4
+							break
+						end
+						if desired then
+							if desired == 4 then
+								desired = nil
+							end
+							break
+						end
+						rt_store_i32(memory_at_0, loc_7, rt_add_i32(rt_load_i32(memory_at_0, loc_7), rt_load_i32(memory_at_0, loc_0)))
+						loc_5 = rt_load_i32(memory_at_0, loc_0 + 16)
+						rt_store_i32(memory_at_0, loc_7 + 16, loc_5)
+						rt_store_i32(memory_at_0, loc_5 + 20, loc_7)
+						while true do
+							loc_9 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
+							if loc_0 ~= rt_load_i32(memory_at_0, loc_9 + 28) then
+								break
+							end
+							rt_store_i32(memory_at_0, loc_9 + 28, loc_7)
+							break
+						end
+						if desired then
+							if desired == 4 then
+								desired = nil
+							end
+							break
+						end
+						loc_0 = loc_7
+						break
+					end
+					if desired then
+						if desired == 3 then
+							desired = nil
+						end
+						break
+					end
+					while true do
+						if rt_load_i32(memory_at_0, loc_5 + 8) ~= 4 then
+							break
+						end
+						rt_store_i32(memory_at_0, loc_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0), rt_load_i32(memory_at_0, loc_5)))
+						loc_7 = rt_load_i32(memory_at_0, loc_5 + 16)
+						rt_store_i32(memory_at_0, loc_0 + 16, loc_7)
+						rt_store_i32(memory_at_0, loc_7 + 20, loc_0)
+						loc_7 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
+						if loc_5 ~= rt_load_i32(memory_at_0, loc_7 + 28) then
+							break
+						end
+						rt_store_i32(memory_at_0, loc_7 + 28, loc_0)
+						break
+					end
+					if desired then
+						if desired == 3 then
+							desired = nil
+						end
+						break
+					end
+					loc_5 = rt_load_i32(memory_at_0, loc_8 + 16)
+					loc_0 = rt_load_i32(memory_at_0, loc_5 + 16)
+					desired = 2
+					break
+				end
+				if desired then
+					if desired == 2 then
+						desired = nil
+					end
+					break
+				end
+				loc_0 = rt_load_i32(memory_at_0, loc_0 + 16)
+				break
+			end
+			if desired then
+				if desired == 1 then
+					desired = nil
+					continue
+				end
+				break
+			end
+			if rt_load_i32(memory_at_0, loc_5 + 8) ~= 4 then
+				continue
+			end
+			loc_7 = rt_load_i32(memory_at_0, loc_5)
+			if rt_lt_i32(loc_7, loc_4) then
+				continue
+			end
+			break
+		end
+		while true do
+			loc_7 = rt_sub_i32(loc_7, loc_4)
+			if rt_lt_i32(loc_7, 65) then
+				break
+			end
+			loc_0 = rt_add_i32(loc_5, loc_4)
+			rt_store_i32(memory_at_0, loc_0, loc_7)
+			rt_store_i32(memory_at_0, loc_0 + 20, loc_5)
+			rt_store_i64(memory_at_0, loc_0 + 4, rt_i64_from_u32(0, 4))
+			loc_7 = rt_load_i32(memory_at_0, loc_5 + 16)
+			rt_store_i32(memory_at_0, loc_0 + 16, loc_7)
+			rt_store_i32(memory_at_0, loc_7 + 20, loc_0)
+			rt_store_i32(memory_at_0, loc_5, loc_4)
+			rt_store_i32(memory_at_0, loc_5 + 16, loc_0)
+			break
+		end
+		while true do
+			while true do
+				if rt_lt_i32(loc_1, 7) then
+					break
+				end
+				if loc_2 ~= 0 then
+					break
+				end
+				FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 1759), 0)
+				rt_store_i32(memory_at_0, loc_5 + 8, loc_1)
+				rt_store_i32(memory_at_0, loc_5 + 4, 0)
+				loc_0 = rt_add_i32(loc_5, 24)
+				desired = 1
+				break
+			end
+			if desired then
+				if desired == 1 then
+					desired = nil
+				end
+				break
+			end
+			rt_store_i32(memory_at_0, loc_5 + 8, loc_1)
+			rt_store_i32(memory_at_0, loc_5 + 4, loc_2)
+			loc_0 = rt_add_i32(loc_5, 24)
+			if loc_2 == 0 then
+				break
+			end
+			rt_store_i32(memory_at_0, loc_2, loc_0)
+			break
+		end
+		rt_store_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[718].value) + 28, rt_load_i32(memory_at_0, loc_5 + 16))
+		rt_store_i32(memory_at_0, loc_5 + 12, 1919505)
+		GLOBAL_LIST[0].value = rt_add_i32(loc_3, 16)
+		reg_0 = loc_0
+		break
+	end
+	return reg_0
+end
+local zfree = function(loc_0)
+	local loc_1 = 0
+	local loc_2 = 0
+	local loc_3 = 0
+	local desired
+	while true do
+		while true do
+			loc_1 = rt_add_i32(loc_0, 4294967284)
+			if rt_load_i32(memory_at_0, loc_1) == 1919505 then
+				break
+			end
+			FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 8195), 0)
+			break
+		end
+		while true do
+			loc_2 = rt_add_i32(loc_0, 4294967280)
+			if rt_load_i32(memory_at_0, loc_2) == 4 then
+				break
+			end
+			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967276))
+			if loc_3 == 0 then
+				break
+			end
+			rt_store_i32(memory_at_0, loc_3, 0)
+			break
+		end
+		loc_3 = rt_add_i32(loc_0, 4294967272)
+		rt_store_i32(memory_at_0, loc_2, 4)
+		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 4294967276), 0)
+		rt_store_i32(memory_at_0, loc_1, 0)
+		while true do
+			while true do
+				loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967292))
+				if rt_load_i32(memory_at_0, loc_1 + 8) == 4 then
+					break
+				end
+				loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967288))
+				desired = 1
+				break
+			end
+			if desired then
+				if desired == 1 then
+					desired = nil
+				end
+				break
+			end
+			rt_store_i32(memory_at_0, loc_1, rt_add_i32(rt_load_i32(memory_at_0, loc_1), rt_load_i32(memory_at_0, loc_3)))
+			loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 4294967288))
+			rt_store_i32(memory_at_0, loc_1 + 16, loc_0)
+			rt_store_i32(memory_at_0, loc_0 + 20, loc_1)
+			while true do
+				loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
+				if loc_3 ~= rt_load_i32(memory_at_0, loc_2 + 28) then
+					break
+				end
+				rt_store_i32(memory_at_0, loc_2 + 28, loc_1)
+				break
+			end
+			if desired then
+				if desired == 1 then
+					desired = nil
+				end
+				break
+			end
+			loc_3 = loc_1
+			break
+		end
+		while true do
+			if rt_load_i32(memory_at_0, loc_0 + 8) ~= 4 then
+				break
+			end
+			rt_store_i32(memory_at_0, loc_3, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_load_i32(memory_at_0, loc_0)))
+			loc_1 = rt_load_i32(memory_at_0, loc_0 + 16)
+			rt_store_i32(memory_at_0, loc_3 + 16, loc_1)
+			rt_store_i32(memory_at_0, loc_1 + 20, loc_3)
+			loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[718].value)
+			if loc_0 ~= rt_load_i32(memory_at_0, loc_1 + 28) then
+				break
+			end
+			rt_store_i32(memory_at_0, loc_1 + 28, loc_3)
+			break
+		end
+		break
 	end
 end
 local memory_at_0
