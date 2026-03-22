@@ -2,17 +2,6 @@
 local function no_op(num)
 	return num
 end
-local bit_lshift = bit32.lshift
-local bit_rshift = bit32.rshift
-local bit_arshift = bit32.arshift
-
-local bit_and = bit32.band
-local bit_or = bit32.bor
-local bit_xor = bit32.bxor
-local bit_not = bit32.bnot
-
-local bit_extract = bit32.extract
-local bit_replace = bit32.replace
 
 -- X: a[0 __21]
 -- Y: a[22__31]
@@ -23,9 +12,9 @@ local constructor = Vector3.new
 local rt_i64_ZERO = constructor(0, 0, 0)
 
 local function rt_i64_from_u32(data_1, data_2)
-	local x = bit_and(data_1, 0x3FFFFF)
-	local y = bit_and(data_2, 0x3FFFFF)
-	local z = bit_replace(bit_rshift(data_1, 22), bit_rshift(data_2, 22), 10, 10)
+	local x = bit32.band(data_1, 0x3FFFFF)
+	local y = bit32.band(data_2, 0x3FFFFF)
+	local z = bit32.replace(bit32.rshift(data_1, 22), bit32.rshift(data_2, 22), 10, 10)
 
 	return constructor(x, y, z)
 end
@@ -35,20 +24,20 @@ local function rt_i64_is_zero(value)
 end
 
 local function load_d1(value)
-	return bit_replace(bit_and(value.X, 0x3FFFFF), value.Z, 22, 10)
+	return bit32.replace(bit32.band(value.X, 0x3FFFFF), value.Z, 22, 10)
 end
 
 local function load_d2(value)
-	return bit_replace(bit_and(value.Y, 0x3FFFFF), bit_rshift(value.Z, 10), 22, 10)
+	return bit32.replace(bit32.band(value.Y, 0x3FFFFF), bit32.rshift(value.Z, 10), 22, 10)
 end
 
 local function rt_i64_into_u32(value)
 	local x, y, z = value.X, value.Y, value.Z
-	return bit_replace(bit_and(x, 0x3FFFFF), z, 22, 10), bit_replace(bit_and(y, 0x3FFFFF), bit_rshift(z, 10), 22, 10)
+	return bit32.replace(bit32.band(x, 0x3FFFFF), z, 22, 10), bit32.replace(bit32.band(y, 0x3FFFFF), bit32.rshift(z, 10), 22, 10)
 end
 
 local function rt_i64_from_u64(value)
-	return rt_i64_from_u32(bit_and(value % 0x100000000), bit_and(value / 0x100000000))
+	return rt_i64_from_u32(bit32.band(value % 0x100000000), bit32.band(value / 0x100000000))
 end
 
 local function rt_convert_f64_u64(value)
@@ -116,52 +105,52 @@ local function rt_mul_i64(lhs, rhs)
 	local lhs_1, lhs_2 = rt_i64_into_u32(lhs)
 	local rhs_1, rhs_2 = rt_i64_into_u32(rhs)
 
-	local a48 = bit_rshift(lhs_2, 16)
-	local a32 = bit_and(lhs_2, 0xFFFF)
-	local a16 = bit_rshift(lhs_1, 16)
-	local a00 = bit_and(lhs_1, 0xFFFF)
+	local a48 = bit32.rshift(lhs_2, 16)
+	local a32 = bit32.band(lhs_2, 0xFFFF)
+	local a16 = bit32.rshift(lhs_1, 16)
+	local a00 = bit32.band(lhs_1, 0xFFFF)
 
-	local b48 = bit_rshift(rhs_2, 16)
-	local b32 = bit_and(rhs_2, 0xFFFF)
-	local b16 = bit_rshift(rhs_1, 16)
-	local b00 = bit_and(rhs_1, 0xFFFF)
+	local b48 = bit32.rshift(rhs_2, 16)
+	local b32 = bit32.band(rhs_2, 0xFFFF)
+	local b16 = bit32.rshift(rhs_1, 16)
+	local b00 = bit32.band(rhs_1, 0xFFFF)
 
 	local c00 = a00 * b00
-	local c16 = bit_rshift(c00, 16)
+	local c16 = bit32.rshift(c00, 16)
 
-	c00 = bit_and(c00, 0xFFFF)
+	c00 = bit32.band(c00, 0xFFFF)
 	c16 = c16 + a16 * b00
 
-	local c32 = bit_rshift(c16, 16)
+	local c32 = bit32.rshift(c16, 16)
 
-	c16 = bit_and(c16, 0xFFFF)
+	c16 = bit32.band(c16, 0xFFFF)
 	c16 = c16 + a00 * b16
-	c32 = c32 + bit_rshift(c16, 16)
-	c16 = bit_and(c16, 0xFFFF)
+	c32 = c32 + bit32.rshift(c16, 16)
+	c16 = bit32.band(c16, 0xFFFF)
 	c32 = c32 + a32 * b00
 
-	local c48 = bit_rshift(c32, 16)
+	local c48 = bit32.rshift(c32, 16)
 
-	c32 = bit_and(c32, 0xFFFF)
+	c32 = bit32.band(c32, 0xFFFF)
 	c32 = c32 + a16 * b16
-	c48 = c48 + bit_rshift(c32, 16)
-	c32 = bit_and(c32, 0xFFFF)
+	c48 = c48 + bit32.rshift(c32, 16)
+	c32 = bit32.band(c32, 0xFFFF)
 	c32 = c32 + a00 * b32
-	c48 = c48 + bit_rshift(c32, 16)
-	c32 = bit_and(c32, 0xFFFF)
+	c48 = c48 + bit32.rshift(c32, 16)
+	c32 = bit32.band(c32, 0xFFFF)
 	c48 = c48 + a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48
-	c48 = bit_and(c48, 0xFFFF)
+	c48 = bit32.band(c48, 0xFFFF)
 
-	local data_1 = bit_replace(c00, c16, 16, 16)
-	local data_2 = bit_replace(c32, c48, 16, 16)
+	local data_1 = bit32.replace(c00, c16, 16, 16)
+	local data_2 = bit32.replace(c32, c48, 16, 16)
 
 	return rt_i64_from_u32(data_1, data_2)
 end
 
-local function rt_bit_or_i64(lhs, rhs)
-	local x = bit_or(lhs.X, rhs.X)
-	local y = bit_or(lhs.Y, rhs.Y)
-	local z = bit_or(lhs.Z, rhs.Z)
+local function rt_bit32.bor_i64(lhs, rhs)
+	local x = bit32.bor(lhs.X, rhs.X)
+	local y = bit32.bor(lhs.Y, rhs.Y)
+	local z = bit32.bor(lhs.Z, rhs.Z)
 
 	return constructor(x, y, z)
 end
@@ -175,14 +164,14 @@ local function rt_shl_i64(lhs, rhs)
 		local pad = 32 - count
 		local lhs_1, lhs_2 = rt_i64_into_u32(lhs)
 
-		local data_1 = bit_lshift(lhs_1, count)
-		local data_2 = bit_replace(bit_rshift(lhs_1, pad), lhs_2, count, pad)
+		local data_1 = bit32.lshift(lhs_1, count)
+		local data_2 = bit32.replace(bit32.rshift(lhs_1, pad), lhs_2, count, pad)
 
 		return rt_i64_from_u32(data_1, data_2)
 	else
 		local lhs_1 = load_d1(lhs)
 
-		return rt_i64_from_u32(0, bit_lshift(lhs_1, count - 32))
+		return rt_i64_from_u32(0, bit32.lshift(lhs_1, count - 32))
 	end
 end
 
@@ -207,16 +196,16 @@ local function rt_div_u64(lhs, rhs)
 		local rem_1, rem_2 = rt_i64_into_u32(rt_shl_i64(remainder, rt_i64_ONE))
 
 		if i > 31 then
-			rem_1 = bit_or(rem_1, bit_extract(num_2, i - 32, 1))
+			rem_1 = bit32.bor(rem_1, bit32.extract(num_2, i - 32, 1))
 		else
-			rem_1 = bit_or(rem_1, bit_extract(num_1, i, 1))
+			rem_1 = bit32.bor(rem_1, bit32.extract(num_1, i, 1))
 		end
 
 		remainder = rt_i64_from_u32(rem_1, rem_2)
 
 		if not rt_lt_u64(remainder, rhs) then
 			remainder = rt_sub_i64(remainder, rhs)
-			quotient = rt_bit_or_i64(quotient, rt_shl_i64(rt_i64_ONE, rt_i64_from_u32(i, 0)))
+			quotient = rt_bit32.bor_i64(quotient, rt_shl_i64(rt_i64_ONE, rt_i64_from_u32(i, 0)))
 		end
 	end
 
@@ -229,8 +218,8 @@ end
 
 local function rt_i64_negate(value)
 	local value_1, value_2 = rt_i64_into_u32(value)
-	local data_1 = bit_not(value_1) + 1
-	local data_2 = bit_not(value_2)
+	local data_1 = bit32.bnot(value_1) + 1
+	local data_2 = bit32.bnot(value_2)
 
 	if data_1 >= 0x100000000 then
 		data_1 = data_1 - 0x100000000
@@ -269,26 +258,26 @@ local function rt_div_i64(lhs, rhs)
 	return quotient, remainder
 end
 
-local function rt_bit_and_i64(lhs, rhs)
-	local x = bit_and(lhs.X, rhs.X)
-	local y = bit_and(lhs.Y, rhs.Y)
-	local z = bit_and(lhs.Z, rhs.Z)
+local function rt_bit32.band_i64(lhs, rhs)
+	local x = bit32.band(lhs.X, rhs.X)
+	local y = bit32.band(lhs.Y, rhs.Y)
+	local z = bit32.band(lhs.Z, rhs.Z)
 
 	return constructor(x, y, z)
 end
 
-local function rt_bit_not_i64(value)
-	local x = bit_and(bit_not(value.X), 0xFFFFFF)
-	local y = bit_and(bit_not(value.Y), 0xFFFFFF)
-	local z = bit_and(bit_not(value.Z), 0xFFFFFF)
+local function rt_bit32.bnot_i64(value)
+	local x = bit32.band(bit32.bnot(value.X), 0xFFFFFF)
+	local y = bit32.band(bit32.bnot(value.Y), 0xFFFFFF)
+	local z = bit32.band(bit32.bnot(value.Z), 0xFFFFFF)
 
 	return constructor(x, y, z)
 end
 
-local function rt_bit_xor_i64(lhs, rhs)
-	local x = bit_xor(lhs.X, rhs.X)
-	local y = bit_xor(lhs.Y, rhs.Y)
-	local z = bit_xor(lhs.Z, rhs.Z)
+local function rt_bit32.bxor_i64(lhs, rhs)
+	local x = bit32.bxor(lhs.X, rhs.X)
+	local y = bit32.bxor(lhs.Y, rhs.Y)
+	local z = bit32.bxor(lhs.Z, rhs.Z)
 
 	return constructor(x, y, z)
 end
@@ -301,14 +290,14 @@ local function rt_shr_u64(lhs, rhs)
 	elseif count < 32 then
 		local lhs_1, lhs_2 = rt_i64_into_u32(lhs)
 
-		local data_1 = bit_replace(bit_rshift(lhs_1, count), lhs_2, 32 - count, count)
-		local data_2 = bit_rshift(lhs_2, count)
+		local data_1 = bit32.replace(bit32.rshift(lhs_1, count), lhs_2, 32 - count, count)
+		local data_2 = bit32.rshift(lhs_2, count)
 
 		return rt_i64_from_u32(data_1, data_2)
 	else
 		local lhs_2 = load_d2(lhs)
 
-		return rt_i64_from_u32(bit_rshift(lhs_2, count - 32), 0)
+		return rt_i64_from_u32(bit32.rshift(lhs_2, count - 32), 0)
 	end
 end
 
@@ -320,14 +309,14 @@ local function rt_shr_i64(lhs, rhs)
 	elseif count < 32 then
 		local lhs_1, lhs_2 = rt_i64_into_u32(lhs)
 
-		local data_1 = bit_replace(bit_rshift(lhs_1, count), lhs_2, 32 - count, count)
-		local data_2 = bit_arshift(lhs_2, count)
+		local data_1 = bit32.replace(bit32.rshift(lhs_1, count), lhs_2, 32 - count, count)
+		local data_2 = bit32.arshift(lhs_2, count)
 
 		return rt_i64_from_u32(data_1, data_2)
 	else
 		local lhs_2 = load_d2(lhs)
 
-		local data_1 = bit_arshift(lhs_2, count - 32)
+		local data_1 = bit32.arshift(lhs_2, count - 32)
 		local data_2 = lhs_2 >= 0x80000000 and 0xFFFFFFFF or 0
 
 		return rt_i64_from_u32(data_1, data_2)
@@ -341,7 +330,7 @@ local function rt_rotl_i64(lhs, rhs)
 		local data_1 = rt_shl_i64(lhs, rhs)
 		local data_2 = rt_shr_u64(lhs, rt_sub_i64(NUM_SIX_FOUR, rhs))
 
-		return rt_bit_or_i64(data_1, data_2)
+		return rt_bit32.bor_i64(data_1, data_2)
 	end
 end
 
@@ -352,7 +341,7 @@ local function rt_rotr_i64(lhs, rhs)
 		local data_1 = rt_shr_u64(lhs, rhs)
 		local data_2 = rt_shl_i64(lhs, rt_sub_i64(NUM_SIX_FOUR, rhs))
 
-		return rt_bit_or_i64(data_1, data_2)
+		return rt_bit32.bor_i64(data_1, data_2)
 	end
 end
 
@@ -394,7 +383,7 @@ local function rt_gt_i64(lhs, rhs)
 end
 
 local function rt_convert_f64_i32(num)
-	return bit_xor(num, 0x80000000) - 0x80000000
+	return bit32.bxor(num, 0x80000000) - 0x80000000
 end
 
 local assert = assert
@@ -408,26 +397,26 @@ local math_min = math.min
 local math_max = math.max
 
 local function rt_add_i32(lhs, rhs)
-	return bit_or(lhs + rhs, 0)
+	return bit32.bor(lhs + rhs, 0)
 end
 
 local function rt_sub_i32(lhs, rhs)
-	return bit_or(lhs - rhs, 0)
+	return bit32.bor(lhs - rhs, 0)
 end
 
 local function rt_mul_i32(lhs, rhs)
 	if (lhs + rhs) < 0x8000000 then
-		return bit_or(lhs * rhs, 0)
+		return bit32.bor(lhs * rhs, 0)
 	else
-		local a16 = bit_rshift(lhs, 16)
-		local a00 = bit_and(lhs, 0xFFFF)
-		local b16 = bit_rshift(rhs, 16)
-		local b00 = bit_and(rhs, 0xFFFF)
+		local a16 = bit32.rshift(lhs, 16)
+		local a00 = bit32.band(lhs, 0xFFFF)
+		local b16 = bit32.rshift(rhs, 16)
+		local b00 = bit32.band(rhs, 0xFFFF)
 
 		local c00 = a00 * b00
 		local c16 = a16 * b00 + a00 * b16
 
-		return bit_or(c00 + bit_lshift(c16, 16), 0)
+		return bit32.bor(c00 + bit32.lshift(c16, 16), 0)
 	end
 end
 
@@ -437,13 +426,13 @@ local function rt_div_i32(lhs, rhs)
 	lhs = rt_convert_f64_i32(lhs)
 	rhs = rt_convert_f64_i32(rhs)
 
-	return bit_or(math_modf(lhs / rhs), 0)
+	return bit32.bor(math_modf(lhs / rhs), 0)
 end
 
 local function rt_div_u32(lhs, rhs)
 	assert(rhs ~= 0, "division by zero")
 
-	return bit_or(math_modf(lhs / rhs), 0)
+	return bit32.bor(math_modf(lhs / rhs), 0)
 end
 
 local function rt_rem_i32(lhs, rhs)
@@ -452,7 +441,7 @@ local function rt_rem_i32(lhs, rhs)
 	lhs = rt_convert_f64_i32(lhs)
 	rhs = rt_convert_f64_i32(rhs)
 
-	return bit_or(math_fmod(lhs, rhs), 0)
+	return bit32.bor(math_fmod(lhs, rhs), 0)
 end
 
 local function rt_rem_i64(lhs, rhs)
@@ -518,12 +507,12 @@ local bit_countlz = bit32.countlz
 local bit_countrz = bit32.countrz
 
 local function rt_popcnt_i32(num)
-	num = num - bit_and(bit_rshift(num, 1), 0x55555555)
-	num = bit_and(num, 0x33333333) + bit_and(bit_rshift(num, 2), 0x33333333)
-	num = bit_and((num + bit_rshift(num, 4)), 0x0F0F0F0F)
-	num = num + bit_rshift(num, 8)
-	num = num + bit_rshift(num, 16)
-	return bit_and(num, 0x0000003F)
+	num = num - bit32.band(bit32.rshift(num, 1), 0x55555555)
+	num = bit32.band(num, 0x33333333) + bit32.band(bit32.rshift(num, 2), 0x33333333)
+	num = bit32.band((num + bit32.rshift(num, 4)), 0x0F0F0F0F)
+	num = num + bit32.rshift(num, 8)
+	num = num + bit32.rshift(num, 16)
+	return bit32.band(num, 0x0000003F)
 end
 
 local function rt_clz_i64(num)
@@ -599,15 +588,15 @@ local bit_lrotate = bit32.lrotate
 local bit_rrotate = bit32.rrotate
 
 local function rt_shl_i32(lhs, rhs)
-	return bit_lshift(lhs, rhs % 32)
+	return bit32.lshift(lhs, rhs % 32)
 end
 
 local function rt_shr_u32(lhs, rhs)
-	return bit_rshift(lhs, rhs % 32)
+	return bit32.rshift(lhs, rhs % 32)
 end
 
 local function rt_shr_i32(lhs, rhs)
-	return bit_arshift(lhs, rhs % 32)
+	return bit32.arshift(lhs, rhs % 32)
 end
 
 local function rt_rotl_i32(lhs, rhs)
@@ -641,7 +630,7 @@ local function rt_wrap_i32_i64(num)
 end
 
 local function rt_truncate_i32_f64(num)
-	return bit_or(rt_truncate_f64(num), 0)
+	return bit32.bor(rt_truncate_f64(num), 0)
 end
 
 local function rt_truncate_i64_f64(num)
@@ -665,7 +654,7 @@ end
 local function rt_saturate_i32_f64(num)
 	local temp = math_clamp(rt_truncate_f64(num), -0x80000000, 0x7FFFFFFF)
 
-	return bit_or(temp, 0)
+	return bit32.bor(temp, 0)
 end
 
 local function rt_saturate_u32_f64(num)
@@ -693,20 +682,20 @@ local function rt_saturate_u64_f64(num)
 end
 
 local function rt_extend_i32_n8(num)
-	num = bit_and(num, 0xFF)
+	num = bit32.band(num, 0xFF)
 
 	if num >= 0x80 then
-		return bit_or(num - 0x100, 0)
+		return bit32.bor(num - 0x100, 0)
 	else
 		return num
 	end
 end
 
 local function rt_extend_i32_n16(num)
-	num = bit_and(num, 0xFFFF)
+	num = bit32.band(num, 0xFFFF)
 
 	if num >= 0x8000 then
-		return bit_or(num - 0x10000, 0)
+		return bit32.bor(num - 0x10000, 0)
 	else
 		return num
 	end
@@ -715,7 +704,7 @@ end
 local function rt_extend_i64_n8(num)
 	local data_1, _ = rt_i64_into_u32(num)
 
-	data_1 = bit_and(data_1, 0xFF)
+	data_1 = bit32.band(data_1, 0xFF)
 
 	if data_1 >= 0x80 then
 		local temp = rt_i64_from_u32(-data_1 + 0x100, 0)
@@ -729,7 +718,7 @@ end
 local function rt_extend_i64_n16(num)
 	local data_1, _ = rt_i64_into_u32(num)
 
-	data_1 = bit_and(data_1, 0xFFFF)
+	data_1 = bit32.band(data_1, 0xFFFF)
 
 	if data_1 >= 0x8000 then
 		local temp = rt_i64_from_u32(-data_1 + 0x10000, 0)
@@ -833,7 +822,7 @@ local buffer_write_u8 = buffer.writeu8
 local buffer_write_u16 = buffer.writeu16
 
 local function rt_load_i32_i8(memory, addr)
-	return bit_or(buffer_read_i8(memory.data, addr), 0)
+	return bit32.bor(buffer_read_i8(memory.data, addr), 0)
 end
 
 local function rt_load_i32_u8(memory, addr)
@@ -841,7 +830,7 @@ local function rt_load_i32_u8(memory, addr)
 end
 
 local function rt_load_i32_i16(memory, addr)
-	return bit_or(buffer_read_i16(memory.data, addr), 0)
+	return bit32.bor(buffer_read_i16(memory.data, addr), 0)
 end
 
 local function rt_load_i32_u16(memory, addr)
@@ -1018,7 +1007,7 @@ local zmalloc = function(loc_0, loc_1, loc_2)
 	while true do
 		loc_3 = rt_sub_i32(GLOBAL_LIST[0].value, 16)
 		GLOBAL_LIST[0].value = loc_3
-		loc_4 = rt_add_i32(bit_and(rt_add_i32(loc_0, 3), 4294967292), 24)
+		loc_4 = rt_add_i32(bit32.band(rt_add_i32(loc_0, 3), 4294967292), 24)
 		loc_0 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[718].value) + 28)
 		loc_5 = rt_load_i32(memory_at_0, loc_0 + 20)
 		loc_0 = (if rt_load_i32(memory_at_0, loc_5 + 8) == 4 then loc_5 else loc_0)
@@ -2560,9 +2549,9 @@ FUNC_LIST[113] = function(loc_0, loc_1)
 			end
 			loc_2 = 1
 			loc_3 = GLOBAL_LIST[1].value
-			rt_store_i32(memory_at_0, rt_add_i32(loc_3, 16129152), bit_and(rt_add_i32(loc_4, 1), 15))
+			rt_store_i32(memory_at_0, rt_add_i32(loc_3, 16129152), bit32.band(rt_add_i32(loc_4, 1), 15))
 			loc_3 = rt_load_i32_u16(memory_at_0, rt_add_i32(rt_add_i32(loc_3, 16129168), rt_shl_i32(loc_4, 1)))
-			rt_store_i32(memory_at_0, loc_0, bit_and(rt_shr_u32(loc_3, 8), 1))
+			rt_store_i32(memory_at_0, loc_0, bit32.band(rt_shr_u32(loc_3, 8), 1))
 			rt_store_i32_n8(memory_at_0, loc_1, loc_3)
 			break
 		end
@@ -2585,8 +2574,8 @@ FUNC_LIST[115] = function(loc_0, loc_1)
 		reg_0 = rt_add_i32(loc_2, 16129168)
 		loc_2 = rt_add_i32(loc_2, 16129156)
 		loc_3 = rt_load_i32(memory_at_0, loc_2)
-		rt_store_i32_n16(memory_at_0, rt_add_i32(reg_0, rt_shl_i32(loc_3, 1)), bit_or(bit_and(loc_1, 255), rt_shl_i32(loc_0, 8)))
-		rt_store_i32(memory_at_0, loc_2, bit_and(rt_add_i32(loc_3, 1), 15))
+		rt_store_i32_n16(memory_at_0, rt_add_i32(reg_0, rt_shl_i32(loc_3, 1)), bit32.bor(bit32.band(loc_1, 255), rt_shl_i32(loc_0, 8)))
+		rt_store_i32(memory_at_0, loc_2, bit32.band(rt_add_i32(loc_3, 1), 15))
 		break
 	end
 end
@@ -2959,7 +2948,7 @@ FUNC_LIST[124] = function()
 			loc_0 = GLOBAL_LIST[1].value
 			loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129376))
 			loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129380))
-			if bit_or(loc_1, loc_2) == 0 then
+			if bit32.bor(loc_1, loc_2) == 0 then
 				break
 			end
 			loc_0 = GLOBAL_LIST[1].value
@@ -3127,7 +3116,7 @@ FUNC_LIST[125] = function()
 		while true do
 			loc_6 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129376))
 			loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129380))
-			if bit_or(loc_6, loc_2) == 0 then
+			if bit32.bor(loc_6, loc_2) == 0 then
 				break
 			end
 			loc_0 = GLOBAL_LIST[1].value
@@ -4188,12 +4177,12 @@ FUNC_LIST[136] = function()
 			loc_3 = rt_add_i32(loc_0, 91224)
 			reg_1 = FUNC_LIST[314](loc_1, rt_load_i32(memory_at_0, loc_3))
 			loc_1 = rt_add_i32(loc_0, 16129224)
-			reg_1 = FUNC_LIST[314](bit_and(reg_1, 4294901760), rt_load_i32(memory_at_0, loc_1))
+			reg_1 = FUNC_LIST[314](bit32.band(reg_1, 4294901760), rt_load_i32(memory_at_0, loc_1))
 			loc_4 = rt_add_i32(loc_0, 16129204)
 			rt_store_i32(memory_at_0, loc_2, rt_add_i32(reg_1, rt_div_i32(rt_load_i32(memory_at_0, loc_4), 4294967294)))
 			loc_5 = rt_add_i32(loc_0, 16129256)
 			reg_0 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_5)) + 16), rt_load_i32(memory_at_0, loc_3))
-			reg_0 = FUNC_LIST[314](bit_and(reg_0, 4294901760), rt_load_i32(memory_at_0, loc_1))
+			reg_0 = FUNC_LIST[314](bit32.band(reg_0, 4294901760), rt_load_i32(memory_at_0, loc_1))
 			loc_1 = reg_0
 			rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16129232), rt_add_i32(rt_load_i32(memory_at_0, loc_4), rt_load_i32(memory_at_0, loc_2)))
 			loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129212))
@@ -4287,7 +4276,7 @@ FUNC_LIST[138] = function()
 			loc_0 = GLOBAL_LIST[1].value
 			loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129376))
 			loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16129380))
-			if bit_or(loc_1, loc_2) == 0 then
+			if bit32.bor(loc_1, loc_2) == 0 then
 				break
 			end
 			loc_0 = GLOBAL_LIST[1].value
@@ -4416,7 +4405,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 			loc_6 = (if rt_gt_i32(loc_4, loc_2) then 8 else (if rt_lt_i32(loc_4, loc_5) then 4 else 0))
 			loc_4 = rt_load_i32(memory_at_0, loc_0 + 4)
 			loc_2 = (if rt_gt_i32(loc_4, loc_2) then 8 else (if rt_lt_i32(loc_4, loc_5) then 4 else 0))
-			if bit_and(loc_6, loc_2) ~= 0 then
+			if bit32.band(loc_6, loc_2) ~= 0 then
 				break
 			end
 			loc_4 = GLOBAL_LIST[1].value
@@ -4427,7 +4416,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					if rt_ge_i32(loc_7, loc_4) then
 						break
 					end
-					loc_2 = bit_or(loc_2, 1)
+					loc_2 = bit32.bor(loc_2, 1)
 					desired = 2
 					break
 				end
@@ -4437,7 +4426,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					end
 					break
 				end
-				loc_2 = (if rt_gt_i32(loc_7, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129232))) then bit_or(loc_2, 2) else loc_2)
+				loc_2 = (if rt_gt_i32(loc_7, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129232))) then bit32.bor(loc_2, 2) else loc_2)
 				break
 			end
 			if desired then
@@ -4452,7 +4441,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					if rt_ge_i32(loc_5, loc_4) then
 						break
 					end
-					loc_5 = bit_or(loc_6, 1)
+					loc_5 = bit32.bor(loc_6, 1)
 					desired = 2
 					break
 				end
@@ -4462,7 +4451,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					end
 					break
 				end
-				loc_5 = (if rt_gt_i32(loc_5, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129232))) then bit_or(loc_6, 2) else loc_6)
+				loc_5 = (if rt_gt_i32(loc_5, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129232))) then bit32.bor(loc_6, 2) else loc_6)
 				break
 			end
 			if desired then
@@ -4471,7 +4460,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 				end
 				break
 			end
-			if bit_and(loc_5, loc_2) ~= 0 then
+			if bit32.band(loc_5, loc_2) ~= 0 then
 				break
 			end
 			loc_2 = GLOBAL_LIST[1].value
@@ -4498,7 +4487,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					if rt_gt_i32(loc_7, 4294967295) then
 						break
 					end
-					loc_0 = bit_or(loc_0, 1)
+					loc_0 = bit32.bor(loc_0, 1)
 					desired = 2
 					break
 				end
@@ -4508,7 +4497,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					end
 					break
 				end
-				loc_2 = bit_or(loc_0, 2)
+				loc_2 = bit32.bor(loc_0, 2)
 				loc_0 = (if loc_7 < 320 then (if rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129220)) ~= 0 then loc_0 else loc_2) else loc_2)
 				break
 			end
@@ -4525,7 +4514,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					if rt_gt_i32(loc_10, 4294967295) then
 						break
 					end
-					loc_4 = bit_or(loc_2, 1)
+					loc_4 = bit32.bor(loc_2, 1)
 					desired = 2
 					break
 				end
@@ -4535,7 +4524,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					end
 					break
 				end
-				loc_3 = bit_or(loc_2, 2)
+				loc_3 = bit32.bor(loc_2, 2)
 				loc_4 = (if loc_10 < 320 then (if rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129220)) ~= 0 then loc_2 else loc_3) else loc_3)
 				break
 			end
@@ -4546,7 +4535,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 				break
 			end
 			loc_3 = 0
-			if bit_and(loc_4, loc_0) ~= 0 then
+			if bit32.band(loc_4, loc_0) ~= 0 then
 				break
 			end
 			loc_11 = rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16129220))
@@ -4554,7 +4543,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 			loc_13 = rt_add_i32(loc_9, 4294967295)
 			while true do
 				while true do
-					if bit_or(loc_4, loc_0) ~= 0 then
+					if bit32.bor(loc_4, loc_0) ~= 0 then
 						break
 					end
 					reg_0 = 1
@@ -4571,7 +4560,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 				while true do
 					while true do
 						loc_5 = (if loc_0 ~= 0 then loc_0 else loc_4)
-						if bit_and(loc_5, 8) == 0 then
+						if bit32.band(loc_5, 8) == 0 then
 							break
 						end
 						loc_3 = rt_add_i32(rt_div_i32(rt_mul_i32(rt_sub_i32(loc_10, loc_7), loc_6), rt_sub_i32(loc_6, loc_8)), loc_7)
@@ -4586,7 +4575,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 						break
 					end
 					while true do
-						if bit_and(loc_5, 4) == 0 then
+						if bit32.band(loc_5, 4) == 0 then
 							break
 						end
 						loc_3 = rt_add_i32(rt_div_i32(rt_mul_i32(rt_sub_i32(loc_10, loc_7), rt_sub_i32(loc_6, loc_9)), rt_sub_i32(loc_6, loc_8)), loc_7)
@@ -4601,7 +4590,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 						break
 					end
 					while true do
-						if bit_and(loc_5, 2) == 0 then
+						if bit32.band(loc_5, 2) == 0 then
 							break
 						end
 						loc_2 = rt_add_i32(rt_div_i32(rt_mul_i32(rt_sub_i32(loc_12, loc_7), rt_sub_i32(loc_8, loc_6)), rt_sub_i32(loc_10, loc_7)), loc_6)
@@ -4617,7 +4606,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					end
 					loc_3 = 0
 					while true do
-						if bit_and(loc_5, 1) ~= 0 then
+						if bit32.band(loc_5, 1) ~= 0 then
 							break
 						end
 						loc_2 = 0
@@ -4653,7 +4642,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 								if rt_gt_i32(loc_3, 4294967295) then
 									break
 								end
-								loc_0 = bit_or(loc_14, 1)
+								loc_0 = bit32.bor(loc_14, 1)
 								desired = 4
 								break
 							end
@@ -4663,7 +4652,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 								end
 								break
 							end
-							loc_0 = bit_or(loc_14, 2)
+							loc_0 = bit32.bor(loc_14, 2)
 							loc_0 = (if loc_11 ~= 0 then (if loc_3 < 320 then loc_14 else loc_0) else loc_0)
 							desired = 4
 							break
@@ -4681,7 +4670,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 								if rt_gt_i32(loc_3, 4294967295) then
 									break
 								end
-								loc_4 = bit_or(loc_14, 1)
+								loc_4 = bit32.bor(loc_14, 1)
 								desired = 5
 								break
 							end
@@ -4691,7 +4680,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 								end
 								break
 							end
-							loc_4 = bit_or(loc_14, 2)
+							loc_4 = bit32.bor(loc_14, 2)
 							loc_4 = (if loc_11 ~= 0 then (if loc_3 < 320 then loc_14 else loc_4) else loc_4)
 							break
 						end
@@ -4724,7 +4713,7 @@ FUNC_LIST[140] = function(loc_0, loc_1)
 					break
 				end
 				loc_3 = 0
-				if bit_and(loc_4, loc_0) == 0 then
+				if bit32.band(loc_4, loc_0) == 0 then
 					continue
 				end
 				break
@@ -4821,14 +4810,14 @@ FUNC_LIST[141] = function(loc_0, loc_1)
 			rt_store_i32_n8(memory_at_0, rt_add_i32(rt_add_i32(loc_9, rt_mul_i32(loc_5, loc_4)), loc_3), loc_1)
 			loc_8 = rt_sub_i32(loc_8, loc_5)
 			loc_6 = rt_shr_i32(loc_8, 31)
-			loc_10 = bit_or(loc_6, 1)
+			loc_10 = bit32.bor(loc_6, 1)
 			loc_11 = rt_sub_i32(loc_7, loc_3)
 			loc_7 = rt_shr_i32(loc_11, 31)
-			loc_12 = bit_or(loc_7, 1)
+			loc_12 = bit32.bor(loc_7, 1)
 			while true do
-				loc_11 = rt_sub_i32(bit_xor(loc_11, loc_7), loc_7)
+				loc_11 = rt_sub_i32(bit32.bxor(loc_11, loc_7), loc_7)
 				loc_7 = rt_shl_i32(loc_11, 1)
-				loc_6 = rt_sub_i32(bit_xor(loc_8, loc_6), loc_6)
+				loc_6 = rt_sub_i32(bit32.bxor(loc_8, loc_6), loc_6)
 				loc_8 = rt_shl_i32(loc_6, 1)
 				if loc_7 <= loc_8 then
 					break
@@ -5017,11 +5006,11 @@ FUNC_LIST[144] = function()
 								if loc_1 ~= 0 then
 									break
 								end
-								if bit_and(loc_2, 256) == 0 then
+								if bit32.band(loc_2, 256) == 0 then
 									desired = 5
 									break
 								end
-								if bit_and(loc_2, 128) ~= 0 then
+								if bit32.band(loc_2, 128) ~= 0 then
 									desired = 3
 									break
 								end
@@ -5076,7 +5065,7 @@ FUNC_LIST[144] = function()
 								break
 							end
 							while true do
-								if bit_and(loc_2, 32) == 0 then
+								if bit32.band(loc_2, 32) == 0 then
 									break
 								end
 								loc_3 = GLOBAL_LIST[1].value
@@ -5180,7 +5169,7 @@ FUNC_LIST[144] = function()
 							break
 						end
 						loc_3 = GLOBAL_LIST[1].value
-						if bit_and(loc_2, 128) ~= 0 then
+						if bit32.band(loc_2, 128) ~= 0 then
 							desired = 3
 							break
 						end
@@ -5239,7 +5228,7 @@ FUNC_LIST[145] = function(loc_0, loc_1, loc_2)
 	local reg_1
 	local reg_2
 	while true do
-		loc_2 = bit_and(rt_shr_u32(loc_2, 17), 32764)
+		loc_2 = bit32.band(rt_shr_u32(loc_2, 17), 32764)
 		loc_3 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_2))
 		loc_4 = GLOBAL_LIST[39].value
 		reg_0 = FUNC_LIST[314](rt_load_i32(memory_at_0, loc_0), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), loc_2)))
@@ -5594,7 +5583,7 @@ FUNC_LIST[147] = function()
 		loc_3 = GLOBAL_LIST[15].value
 		loc_4 = GLOBAL_LIST[14].value
 		while true do
-			if bit_and(bit_and((if loc_2 ~= 0 then 1 else 0), (if loc_0 ~= rt_add_i32(loc_3, 864) then 1 else 0)), (if loc_1 == 0 then 1 else 0)) ~= 0 then
+			if bit32.band(bit32.band((if loc_2 ~= 0 then 1 else 0), (if loc_0 ~= rt_add_i32(loc_3, 864) then 1 else 0)), (if loc_1 == 0 then 1 else 0)) ~= 0 then
 				break
 			end
 			if rt_load_i32(memory_at_0, loc_4 + 12) == 0 then
@@ -6368,10 +6357,10 @@ FUNC_LIST[156] = function()
 			if rt_load_i32(memory_at_0, GLOBAL_LIST[76].value) ~= 0 then
 				break
 			end
-			if bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[58].value), rt_load_i32(memory_at_0, GLOBAL_LIST[61].value)) ~= 0 then
+			if bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[58].value), rt_load_i32(memory_at_0, GLOBAL_LIST[61].value)) ~= 0 then
 				break
 			end
-			loc_0 = (if bit_or(bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[51].value), rt_load_i32(memory_at_0, GLOBAL_LIST[77].value)), rt_load_i32(memory_at_0, GLOBAL_LIST[78].value)) == 0 then 1 else 0)
+			loc_0 = (if bit32.bor(bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[51].value), rt_load_i32(memory_at_0, GLOBAL_LIST[77].value)), rt_load_i32(memory_at_0, GLOBAL_LIST[78].value)) == 0 then 1 else 0)
 			break
 		end
 		reg_0 = loc_0
@@ -6517,7 +6506,7 @@ FUNC_LIST[161] = function()
 		loc_0 = rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[88].value), 1)
 		while true do
 			while true do
-				if bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[89].value), 4294967294) ~= 6 then
+				if bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[89].value), 4294967294) ~= 6 then
 					break
 				end
 				loc_0 = rt_rem_i32(loc_0, 7)
@@ -6826,7 +6815,7 @@ FUNC_LIST[163] = function()
 						end
 						break
 					end
-					if bit_and(loc_1, 4294967291) ~= 0 then
+					if bit32.band(loc_1, 4294967291) ~= 0 then
 						desired = 2
 						break
 					end
@@ -7591,7 +7580,7 @@ FUNC_LIST[167] = function()
 					break
 				end
 				loc_3 = GLOBAL_LIST[91].value
-				if bit_and(rt_load_i32(memory_at_0, loc_3), 4294967294) ~= 2 then
+				if bit32.band(rt_load_i32(memory_at_0, loc_3), 4294967294) ~= 2 then
 					desired = 1
 					break
 				end
@@ -7875,7 +7864,7 @@ FUNC_LIST[167] = function()
 				break
 			end
 			while true do
-				reg_0 = FUNC_LIST[767](bit_or(rt_add_i32(loc_0, 256), 8))
+				reg_0 = FUNC_LIST[767](bit32.bor(rt_add_i32(loc_0, 256), 8))
 				if rt_gt_i32(reg_0, 4294967295) then
 					break
 				end
@@ -8446,7 +8435,7 @@ FUNC_LIST[167] = function()
 				break
 			end
 			while true do
-				if bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[108].value), rt_load_i32(memory_at_0, GLOBAL_LIST[40].value)) == 0 then
+				if bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[108].value), rt_load_i32(memory_at_0, GLOBAL_LIST[40].value)) == 0 then
 					break
 				end
 				loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[107].value)
@@ -8572,7 +8561,7 @@ FUNC_LIST[169] = function()
 		FUNC_LIST[39](rt_add_i32(loc_0, 36))
 		loc_1 = GLOBAL_LIST[1].value
 		reg_1 = FUNC_LIST[767](rt_add_i32(loc_1, 7643))
-		rt_store_i32(memory_at_0, loc_0 + 32, rt_shr_u32(bit_xor(reg_1, 4294967295), 31))
+		rt_store_i32(memory_at_0, loc_0 + 32, rt_shr_u32(bit32.bxor(reg_1, 4294967295), 31))
 		reg_0 = GLOBAL_LIST[40].value
 		reg_1 = FUNC_LIST[40](rt_add_i32(loc_0, 12))
 		rt_store_i32(memory_at_0, reg_0, reg_1)
@@ -8927,7 +8916,7 @@ FUNC_LIST[172] = function()
 		rt_store_i32(memory_at_0, GLOBAL_LIST[19].value, 0)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[11].value, 0)
 		loc_1 = GLOBAL_LIST[91].value
-		FUNC_LIST[44]((if bit_and(rt_load_i32(memory_at_0, loc_1), 4294967291) ~= 0 then 65 else 31), 1)
+		FUNC_LIST[44]((if bit32.band(rt_load_i32(memory_at_0, loc_1), 4294967291) ~= 0 then 65 else 31), 1)
 		loc_1 = rt_load_i32(memory_at_0, loc_1)
 		loc_2 = (if loc_1 == 4 then 0 else (if loc_1 == 5 then 1 else loc_1))
 		loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[89].value)
@@ -9688,13 +9677,13 @@ FUNC_LIST[175] = function()
 				if rt_load_i32_u8(memory_at_0, loc_0 + 13) ~= 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 301), 255) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 301), 255) ~= 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 589), 255) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 589), 255) ~= 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 877), 255) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 877), 255) == 0 then
 					desired = 1
 					break
 				end
@@ -10256,7 +10245,7 @@ FUNC_LIST[176] = function()
 								loc_1 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[125].value, rt_shl_i32(loc_1, 3)) + 4)
 								loc_3 = rt_mul_i32(loc_1, 92)
 								loc_1 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[126].value, loc_3), (if loc_0 ~= 0 then 40 else 44)))
-								rt_store_i32(memory_at_0, loc_2, bit_xor(loc_0, 1))
+								rt_store_i32(memory_at_0, loc_2, bit32.bxor(loc_0, 1))
 								loc_2 = GLOBAL_LIST[127].value
 								rt_store_i32(memory_at_0, GLOBAL_LIST[128].value, rt_add_i32(loc_2, rt_mul_i32(loc_1, 28)))
 								while true do
@@ -10396,7 +10385,7 @@ FUNC_LIST[178] = function()
 		loc_0 = rt_load_i32(memory_at_0, loc_1)
 		loc_3 = 0
 		while true do
-			loc_1 = rt_add_i32(loc_2, bit_and(rt_shl_i32(loc_3, 6), 4032))
+			loc_1 = rt_add_i32(loc_2, bit32.band(rt_shl_i32(loc_3, 6), 4032))
 			rt_store_i64(memory_at_0, loc_0 + 56, rt_load_i64(memory_at_0, loc_1 + 56))
 			rt_store_i64(memory_at_0, loc_0 + 48, rt_load_i64(memory_at_0, loc_1 + 48))
 			rt_store_i64(memory_at_0, loc_0 + 40, rt_load_i64(memory_at_0, loc_1 + 40))
@@ -10762,7 +10751,7 @@ FUNC_LIST[180] = function()
 		loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[128].value)
 		loc_0 = rt_load_i32(memory_at_0, loc_1 + 4)
 		loc_1 = rt_load_i32(memory_at_0, loc_1)
-		loc_1 = rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[134].value), rt_shl_i32(loc_1, 3)) + 4), rt_mul_i32(bit_and(loc_0, 32767), 28))
+		loc_1 = rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[134].value), rt_shl_i32(loc_1, 3)) + 4), rt_mul_i32(bit32.band(loc_0, 32767), 28))
 		loc_0 = rt_load_i32_u8(memory_at_0, loc_1 + 20)
 		reg_0 = FUNC_LIST[771](rt_add_i32(rt_load_i32_i16(memory_at_0, loc_1 + 4), rt_load_i32(memory_at_0, GLOBAL_LIST[135].value)), 8)
 		loc_1 = reg_0
@@ -10818,11 +10807,11 @@ FUNC_LIST[181] = function(loc_0, loc_1, loc_2)
 						break
 					end
 					loc_1 = rt_add_i32(loc_4, 3)
-					loc_2 = rt_add_i32(loc_5, rt_mul_i32(bit_and(loc_2, 255), 320))
+					loc_2 = rt_add_i32(loc_5, rt_mul_i32(bit32.band(loc_2, 255), 320))
 					loc_3 = 0
 					loc_0 = loc_6
 					while true do
-						loc_7 = bit_and(loc_6, 7)
+						loc_7 = bit32.band(loc_6, 7)
 						if loc_7 == 0 then
 							break
 						end
@@ -10947,7 +10936,7 @@ FUNC_LIST[182] = function()
 		FUNC_LIST[740](0, 0, 320, 200)
 		loc_2 = rt_div_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[121].value), 4294967066), 4294967294)
 		loc_2 = (if rt_gt_i32(loc_2, 4294966976) then loc_2 else 4294966976)
-		loc_2 = bit_and(rt_shr_i32(loc_2, 31), loc_2)
+		loc_2 = bit32.band(rt_shr_i32(loc_2, 31), loc_2)
 		loc_5 = rt_add_i32(loc_2, 320)
 		loc_6 = rt_add_i32(rt_add_i32(loc_4, rt_shl_i32(loc_2, 2)), 8)
 		loc_7 = rt_add_i32(loc_3, 8)
@@ -10983,11 +10972,11 @@ FUNC_LIST[182] = function()
 								break
 							end
 							loc_2 = rt_add_i32(loc_9, 3)
-							loc_10 = rt_add_i32(loc_8, rt_mul_i32(bit_and(loc_10, 255), 320))
+							loc_10 = rt_add_i32(loc_8, rt_mul_i32(bit32.band(loc_10, 255), 320))
 							loc_12 = 0
 							loc_13 = loc_11
 							while true do
-								loc_14 = bit_and(loc_11, 7)
+								loc_14 = bit32.band(loc_11, 7)
 								if loc_14 == 0 then
 									break
 								end
@@ -11107,11 +11096,11 @@ FUNC_LIST[182] = function()
 							break
 						end
 						loc_2 = rt_add_i32(loc_9, 3)
-						loc_10 = rt_add_i32(loc_8, rt_mul_i32(bit_and(loc_10, 255), 320))
+						loc_10 = rt_add_i32(loc_8, rt_mul_i32(bit32.band(loc_10, 255), 320))
 						loc_12 = 0
 						loc_13 = loc_11
 						while true do
-							loc_14 = bit_and(loc_11, 7)
+							loc_14 = bit32.band(loc_11, 7)
 							if loc_14 == 0 then
 								break
 							end
@@ -11428,8 +11417,8 @@ FUNC_LIST[184] = function(loc_0, loc_1, loc_2)
 			if rt_lt_i32(loc_1, 1) then
 				break
 			end
-			loc_5 = bit_and(loc_1, 2147483644)
-			loc_6 = bit_and(loc_1, 3)
+			loc_5 = bit32.band(loc_1, 2147483644)
+			loc_6 = bit32.band(loc_1, 3)
 			loc_7 = 0
 			loc_8 = (if loc_1 < 4 then 1 else 0)
 			while true do
@@ -11445,11 +11434,11 @@ FUNC_LIST[184] = function(loc_0, loc_1, loc_2)
 						end
 						while true do
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_9, rt_shl_i32(rt_mul_i32(loc_11, loc_2), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_10, rt_shl_i32(loc_11, 1))))
-							loc_13 = bit_or(loc_11, 1)
+							loc_13 = bit32.bor(loc_11, 1)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_9, rt_shl_i32(rt_mul_i32(loc_13, loc_2), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_10, rt_shl_i32(loc_13, 1))))
-							loc_13 = bit_or(loc_11, 2)
+							loc_13 = bit32.bor(loc_11, 2)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_9, rt_shl_i32(rt_mul_i32(loc_13, loc_2), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_10, rt_shl_i32(loc_13, 1))))
-							loc_13 = bit_or(loc_11, 3)
+							loc_13 = bit32.bor(loc_11, 3)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_9, rt_shl_i32(rt_mul_i32(loc_13, loc_2), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_10, rt_shl_i32(loc_13, 1))))
 							loc_11 = rt_add_i32(loc_11, 4)
 							loc_12 = rt_add_i32(loc_12, 4)
@@ -11634,7 +11623,7 @@ FUNC_LIST[186] = function(loc_0, loc_1, loc_2)
 			end
 			break
 		end
-		reg_0 = bit_xor(loc_5, 1)
+		reg_0 = bit32.bxor(loc_5, 1)
 		break
 	end
 	return reg_0
@@ -11684,12 +11673,12 @@ FUNC_LIST[188] = function(loc_0, loc_1, loc_2)
 		reg_0 = FUNC_LIST[780](loc_8, 1, 0)
 		loc_9 = reg_0
 		while true do
-			loc_10 = bit_and((if rt_gt_i32(loc_0, 1) then 1 else 0), (if rt_gt_i32(loc_1, 0) then 1 else 0))
+			loc_10 = bit32.band((if rt_gt_i32(loc_0, 1) then 1 else 0), (if rt_gt_i32(loc_1, 0) then 1 else 0))
 			if loc_10 ~= 1 then
 				break
 			end
-			loc_11 = bit_and(loc_7, 1073741820)
-			loc_12 = bit_and(loc_7, 3)
+			loc_11 = bit32.band(loc_7, 1073741820)
+			loc_12 = bit32.band(loc_7, 3)
 			loc_13 = (if rt_add_i32(loc_7, 4294967295) < 3 then 1 else 0)
 			while true do
 				loc_14 = rt_add_i32(loc_9, rt_shl_i32(loc_6, 1))
@@ -11705,11 +11694,11 @@ FUNC_LIST[188] = function(loc_0, loc_1, loc_2)
 						end
 						while true do
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_3, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_3, 1))))
-							loc_5 = bit_or(loc_3, 1)
+							loc_5 = bit32.bor(loc_3, 1)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_5, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_5, 1))))
-							loc_5 = bit_or(loc_3, 2)
+							loc_5 = bit32.bor(loc_3, 2)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_5, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_5, 1))))
-							loc_5 = bit_or(loc_3, 3)
+							loc_5 = bit32.bor(loc_3, 3)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_5, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_5, 1))))
 							loc_3 = rt_add_i32(loc_3, 4)
 							loc_17 = rt_add_i32(loc_17, 4)
@@ -11792,8 +11781,8 @@ FUNC_LIST[188] = function(loc_0, loc_1, loc_2)
 			if loc_10 == 0 then
 				break
 			end
-			loc_11 = bit_and(loc_7, 1073741820)
-			loc_12 = bit_and(loc_7, 3)
+			loc_11 = bit32.band(loc_7, 1073741820)
+			loc_12 = bit32.band(loc_7, 3)
 			loc_13 = (if rt_add_i32(loc_7, 4294967295) < 3 then 1 else 0)
 			while true do
 				loc_14 = rt_add_i32(loc_9, rt_shl_i32(loc_6, 1))
@@ -11809,11 +11798,11 @@ FUNC_LIST[188] = function(loc_0, loc_1, loc_2)
 						end
 						while true do
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_3, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_3, 1))))
-							loc_5 = bit_or(loc_3, 1)
+							loc_5 = bit32.bor(loc_3, 1)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_5, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_5, 1))))
-							loc_5 = bit_or(loc_3, 2)
+							loc_5 = bit32.bor(loc_3, 2)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_5, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_5, 1))))
-							loc_5 = bit_or(loc_3, 3)
+							loc_5 = bit32.bor(loc_3, 3)
 							rt_store_i32_n16(memory_at_0, rt_add_i32(loc_14, rt_shl_i32(rt_mul_i32(loc_5, loc_1), 1)), rt_load_i32_u16(memory_at_0, rt_add_i32(loc_15, rt_shl_i32(loc_5, 1))))
 							loc_3 = rt_add_i32(loc_3, 4)
 							loc_17 = rt_add_i32(loc_17, 4)
@@ -12026,7 +12015,7 @@ FUNC_LIST[189] = function(loc_0, loc_1, loc_2)
 									end
 									loc_4 = rt_add_i32(rt_add_i32(loc_7, rt_shl_i32(rt_mul_i32(loc_12, loc_3), 1)), loc_13)
 									loc_5 = rt_add_i32(rt_add_i32(loc_8, rt_shl_i32(loc_14, 1)), rt_shl_i32(loc_12, 1))
-									loc_16 = bit_and(loc_15, 3)
+									loc_16 = bit32.band(loc_15, 3)
 									loc_17 = 0
 									while true do
 										while true do
@@ -12043,7 +12032,7 @@ FUNC_LIST[189] = function(loc_0, loc_1, loc_2)
 											end
 											break
 										end
-										loc_18 = bit_and(loc_15, 4294967292)
+										loc_18 = bit32.band(loc_15, 4294967292)
 										loc_0 = 0
 										loc_19 = 0
 										while true do
@@ -12112,7 +12101,7 @@ FUNC_LIST[189] = function(loc_0, loc_1, loc_2)
 									break
 								end
 								loc_4 = rt_add_i32(rt_add_i32(loc_7, rt_shl_i32(rt_mul_i32(loc_0, loc_3), 1)), loc_13)
-								loc_16 = bit_and(loc_19, 3)
+								loc_16 = bit32.band(loc_19, 3)
 								loc_5 = rt_add_i32(loc_6, rt_shl_i32(loc_14, 1))
 								loc_17 = 0
 								while true do
@@ -12130,7 +12119,7 @@ FUNC_LIST[189] = function(loc_0, loc_1, loc_2)
 										end
 										break
 									end
-									loc_12 = bit_and(loc_19, 4294967292)
+									loc_12 = bit32.band(loc_19, 4294967292)
 									loc_0 = 0
 									loc_19 = 0
 									while true do
@@ -12331,7 +12320,7 @@ FUNC_LIST[193] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 			reg_0 = TABLE_LIST[128].data[rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(rt_add_i32(loc_6, 92336), loc_0), 8))](loc_3, loc_4, loc_5)
 			break
 		end
-		reg_0 = bit_and(bit_xor(rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16131984)), 4294967295), 1)
+		reg_0 = bit32.band(bit32.bxor(rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16131984)), 4294967295), 1)
 		break
 	end
 	return reg_0
@@ -12689,7 +12678,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 				end
 				break
 			end
-			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(rt_load_i32_u8(memory_at_0, loc_0 + 5), 1))
+			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(rt_load_i32_u8(memory_at_0, loc_0 + 5), 1))
 			break
 		end
 		while true do
@@ -12712,7 +12701,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 				end
 				break
 			end
-			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(rt_load_i32_u8(memory_at_0, loc_0 + 5), 2))
+			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(rt_load_i32_u8(memory_at_0, loc_0 + 5), 2))
 			rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133568), 0)
 			break
 		end
@@ -12777,7 +12766,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 											break
 										end
 										loc_9 = rt_add_i32(loc_1, 9)
-										loc_1 = (bit_and(rt_add_i32(loc_1, 18), 255) % 9)
+										loc_1 = (bit32.band(rt_add_i32(loc_1, 18), 255) % 9)
 										desired = 7
 										break
 									end
@@ -12790,7 +12779,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 									loc_6 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[1].value, 23768), rt_shl_i32(loc_5, 2)))
 									loc_5 = loc_6
 									loc_9 = rt_add_i32(loc_1, 9)
-									loc_1 = (bit_and(rt_add_i32(loc_6, loc_9), 255) % 9)
+									loc_1 = (bit32.band(rt_add_i32(loc_6, loc_9), 255) % 9)
 									if loc_6 == loc_1 then
 										desired = 2
 										break
@@ -12805,9 +12794,9 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 								end
 								loc_10 = rt_add_i32(loc_8, 128)
 								loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[91].value)
-								loc_11 = bit_or(loc_5, rt_load_i32(memory_at_0, GLOBAL_LIST[90].value))
+								loc_11 = bit32.bor(loc_5, rt_load_i32(memory_at_0, GLOBAL_LIST[90].value))
 								while true do
-									if bit_and(loc_5, 4294967291) == 0 then
+									if bit32.band(loc_5, 4294967291) == 0 then
 										break
 									end
 									while true do
@@ -13052,7 +13041,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 							end
 							break
 						end
-						rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(bit_or(loc_1, rt_load_i32_u8(memory_at_0, loc_0 + 5)), 4))
+						rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(bit32.bor(loc_1, rt_load_i32_u8(memory_at_0, loc_0 + 5)), 4))
 						desired = 1
 						break
 					end
@@ -13132,7 +13121,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 				break
 			end
 			loc_1 = GLOBAL_LIST[1].value
-			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(bit_or(rt_load_i32_u8(memory_at_0, loc_0 + 5), rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(loc_1, 23696), rt_shl_i32(loc_5, 3)) + 4), 3)), 4))
+			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(bit32.bor(rt_load_i32_u8(memory_at_0, loc_0 + 5), rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(loc_1, 23696), rt_shl_i32(loc_5, 3)) + 4), 3)), 4))
 			break
 		end
 		loc_1 = GLOBAL_LIST[1].value
@@ -13199,7 +13188,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 							end
 							break
 						end
-						rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(rt_load_i32_u8(memory_at_0, loc_0 + 5), 2))
+						rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(rt_load_i32_u8(memory_at_0, loc_0 + 5), 2))
 						loc_1 = rt_add_i32(GLOBAL_LIST[1].value, 16133568)
 						desired = 3
 						break
@@ -13292,7 +13281,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 						end
 						break
 					end
-					rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(rt_load_i32_u8(memory_at_0, loc_0 + 5), 2))
+					rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(rt_load_i32_u8(memory_at_0, loc_0 + 5), 2))
 					loc_1 = rt_add_i32(GLOBAL_LIST[1].value, 16133596)
 					desired = 2
 					break
@@ -13371,7 +13360,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 				break
 			end
 			rt_store_i32(memory_at_0, GLOBAL_LIST[180].value, 0)
-			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit_or(rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620)), 2), 130))
+			rt_store_i32_n8(memory_at_0, loc_0 + 5, bit32.bor(rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620)), 2), 130))
 			break
 		end
 		while true do
@@ -13380,7 +13369,7 @@ FUNC_LIST[195] = function(loc_0, loc_1)
 			end
 			loc_1 = rt_add_i32(GLOBAL_LIST[1].value, 16133628)
 			loc_2 = rt_add_i32(rt_load_i32_u16(memory_at_0, loc_1), rt_load_i32_u16(memory_at_0, loc_0 + 2))
-			loc_5 = bit_and(rt_add_i32(loc_2, 128), 4294967040)
+			loc_5 = bit32.band(rt_add_i32(loc_2, 128), 4294967040)
 			rt_store_i32_n16(memory_at_0, loc_0 + 2, loc_5)
 			rt_store_i32_n16(memory_at_0, loc_1, rt_sub_i32(loc_2, loc_5))
 			break
@@ -13402,7 +13391,7 @@ FUNC_LIST[196] = function()
 			if rt_load_i32(memory_at_0, GLOBAL_LIST[90].value) ~= 2 then
 				break
 			end
-			if bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[89].value), 4294967294) ~= 8 then
+			if bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[89].value), 4294967294) ~= 8 then
 				break
 			end
 			loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[16].value)
@@ -13599,7 +13588,7 @@ FUNC_LIST[197] = function(loc_0)
 					break
 				end
 				while true do
-					if bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[82].value), rt_load_i32(memory_at_0, GLOBAL_LIST[41].value)) ~= 0 then
+					if bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[82].value), rt_load_i32(memory_at_0, GLOBAL_LIST[41].value)) ~= 0 then
 						break
 					end
 					loc_2 = GLOBAL_LIST[77].value
@@ -13741,7 +13730,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_1 = rt_load_i32(memory_at_0, loc_0 + 8)
 					loc_2 = rt_shr_i32(loc_1, 31)
-					rt_store_i32(memory_at_0, GLOBAL_LIST[60].value, rt_sub_i32(bit_xor(loc_1, loc_2), loc_2))
+					rt_store_i32(memory_at_0, GLOBAL_LIST[60].value, rt_sub_i32(bit32.bxor(loc_1, loc_2), loc_2))
 					loc_2 = rt_load_i32(memory_at_0, loc_0)
 					break
 				end
@@ -13875,7 +13864,7 @@ FUNC_LIST[197] = function(loc_0)
 						break
 					end
 					loc_1 = rt_load_i32(memory_at_0, loc_0 + 4)
-					loc_3 = bit_and(loc_1, 1)
+					loc_3 = bit32.band(loc_1, 1)
 					loc_4 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16134864) + 4)
 					loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[190].value)
 					loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[191].value)
@@ -13925,7 +13914,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_6 + 4, loc_3)
-					loc_3 = bit_and(loc_1, 2)
+					loc_3 = bit32.band(loc_1, 2)
 					loc_4 = rt_shr_u32(loc_3, 1)
 					while true do
 						if loc_3 == 0 then
@@ -13963,7 +13952,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_6 + 8, loc_4)
-					loc_3 = bit_and(loc_1, 4)
+					loc_3 = bit32.band(loc_1, 4)
 					loc_4 = rt_shr_u32(loc_3, 2)
 					while true do
 						if loc_3 == 0 then
@@ -14011,7 +14000,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_6 + 12, loc_4)
-					loc_3 = bit_and(loc_1, 8)
+					loc_3 = bit32.band(loc_1, 8)
 					loc_4 = rt_shr_u32(loc_3, 3)
 					while true do
 						if loc_3 == 0 then
@@ -14059,7 +14048,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_6 + 16, loc_4)
-					loc_3 = bit_and(loc_1, 16)
+					loc_3 = bit32.band(loc_1, 16)
 					loc_4 = rt_shr_u32(loc_3, 4)
 					while true do
 						if loc_3 == 0 then
@@ -14107,7 +14096,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_6 + 20, loc_4)
-					loc_3 = bit_and(loc_1, 32)
+					loc_3 = bit32.band(loc_1, 32)
 					loc_4 = rt_shr_u32(loc_3, 5)
 					while true do
 						if loc_3 == 0 then
@@ -14155,7 +14144,7 @@ FUNC_LIST[197] = function(loc_0)
 					end
 					loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_6 + 24, loc_4)
-					loc_3 = bit_and(loc_1, 64)
+					loc_3 = bit32.band(loc_1, 64)
 					loc_4 = rt_shr_u32(loc_3, 6)
 					while true do
 						if loc_3 == 0 then
@@ -14204,7 +14193,7 @@ FUNC_LIST[197] = function(loc_0)
 					loc_3 = rt_add_i32(GLOBAL_LIST[1].value, 16134864)
 					rt_store_i32(memory_at_0, loc_3 + 28, loc_4)
 					while true do
-						loc_1 = bit_and(loc_1, 128)
+						loc_1 = bit32.band(loc_1, 128)
 						if loc_1 == 0 then
 							break
 						end
@@ -14271,7 +14260,7 @@ FUNC_LIST[197] = function(loc_0)
 				while true do
 					loc_2 = rt_add_i32(rt_add_i32(GLOBAL_LIST[1].value, 16134912), rt_shl_i32(loc_1, 2))
 					loc_5 = rt_add_i32(loc_2, 4)
-					loc_4 = bit_and(rt_shl_i32(1, loc_1), loc_6)
+					loc_4 = bit32.band(rt_shl_i32(1, loc_1), loc_6)
 					loc_3 = (if loc_4 ~= 0 then 1 else 0)
 					while true do
 						if rt_load_i32(memory_at_0, loc_2 + 4) ~= 0 then
@@ -14647,7 +14636,7 @@ FUNC_LIST[198] = function()
 							rt_store_i32_n16(memory_at_0, loc_2 + 10, loc_6)
 							loc_7 = rt_add_i32(loc_5, 4)
 							rt_store_i32(memory_at_0, GLOBAL_LIST[199].value, loc_7)
-							rt_store_i32_n16(memory_at_0, loc_2 + 10, bit_or(rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_5 + 3), 8), loc_6))
+							rt_store_i32_n16(memory_at_0, loc_2 + 10, bit32.bor(rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_5 + 3), 8), loc_6))
 							desired = 4
 							break
 						end
@@ -14705,7 +14694,7 @@ FUNC_LIST[198] = function()
 				end
 				while true do
 					loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[52].value)
-					if bit_and(loc_5, 31) ~= 0 then
+					if bit32.band(loc_5, 31) ~= 0 then
 						break
 					end
 					if rt_rem_i32(rt_shr_i32(loc_5, 5), 4) ~= loc_1 then
@@ -14794,7 +14783,7 @@ FUNC_LIST[198] = function()
 							return { [0] = 0, 1, }
 						end)()
 					end
-					temp = br_map[2][rt_add_i32(bit_and(loc_1, 3), 4294967295)] or 2
+					temp = br_map[2][rt_add_i32(bit32.band(loc_1, 3), 4294967295)] or 2
 					if temp < 1 then
 						break
 					elseif temp > 1 then
@@ -14814,7 +14803,7 @@ FUNC_LIST[198] = function()
 				loc_1 = GLOBAL_LIST[61].value
 				reg_0 = loc_1
 				loc_1 = rt_load_i32(memory_at_0, loc_1)
-				rt_store_i32(memory_at_0, reg_0, bit_xor(loc_1, 1))
+				rt_store_i32(memory_at_0, reg_0, bit32.bxor(loc_1, 1))
 				while true do
 					if loc_1 == 1 then
 						break
@@ -14855,7 +14844,7 @@ FUNC_LIST[198] = function()
 				break
 			end
 			rt_store_i32(memory_at_0, GLOBAL_LIST[82].value, 4)
-			rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit_and(rt_shr_u32(loc_1, 2), 7))
+			rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit32.band(rt_shr_u32(loc_1, 2), 7))
 			break
 		end
 		while true do
@@ -14873,7 +14862,7 @@ FUNC_LIST[198] = function()
 							return { [0] = 1, 0, }
 						end)()
 					end
-					temp = br_map[3][rt_add_i32(bit_and(loc_1, 3), 4294967295)] or 2
+					temp = br_map[3][rt_add_i32(bit32.band(loc_1, 3), 4294967295)] or 2
 					if temp < 1 then
 						break
 					elseif temp > 1 then
@@ -14906,7 +14895,7 @@ FUNC_LIST[198] = function()
 					break
 				end
 				rt_store_i32(memory_at_0, GLOBAL_LIST[82].value, 4)
-				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit_and(rt_shr_u32(loc_1, 2), 7))
+				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit32.band(rt_shr_u32(loc_1, 2), 7))
 				desired = 1
 				break
 			end
@@ -14919,7 +14908,7 @@ FUNC_LIST[198] = function()
 			loc_1 = GLOBAL_LIST[61].value
 			reg_0 = loc_1
 			loc_1 = rt_load_i32(memory_at_0, loc_1)
-			rt_store_i32(memory_at_0, reg_0, bit_xor(loc_1, 1))
+			rt_store_i32(memory_at_0, reg_0, bit32.bxor(loc_1, 1))
 			while true do
 				if loc_1 == 1 then
 					break
@@ -14952,7 +14941,7 @@ FUNC_LIST[198] = function()
 							return { [0] = 1, 0, }
 						end)()
 					end
-					temp = br_map[4][rt_add_i32(bit_and(loc_1, 3), 4294967295)] or 2
+					temp = br_map[4][rt_add_i32(bit32.band(loc_1, 3), 4294967295)] or 2
 					if temp < 1 then
 						break
 					elseif temp > 1 then
@@ -14985,7 +14974,7 @@ FUNC_LIST[198] = function()
 					break
 				end
 				rt_store_i32(memory_at_0, GLOBAL_LIST[82].value, 4)
-				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit_and(rt_shr_u32(loc_1, 2), 7))
+				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit32.band(rt_shr_u32(loc_1, 2), 7))
 				desired = 1
 				break
 			end
@@ -14998,7 +14987,7 @@ FUNC_LIST[198] = function()
 			loc_1 = GLOBAL_LIST[61].value
 			reg_0 = loc_1
 			loc_1 = rt_load_i32(memory_at_0, loc_1)
-			rt_store_i32(memory_at_0, reg_0, bit_xor(loc_1, 1))
+			rt_store_i32(memory_at_0, reg_0, bit32.bxor(loc_1, 1))
 			while true do
 				if loc_1 == 1 then
 					break
@@ -15031,7 +15020,7 @@ FUNC_LIST[198] = function()
 							return { [0] = 1, 0, }
 						end)()
 					end
-					temp = br_map[5][rt_add_i32(bit_and(loc_1, 3), 4294967295)] or 2
+					temp = br_map[5][rt_add_i32(bit32.band(loc_1, 3), 4294967295)] or 2
 					if temp < 1 then
 						break
 					elseif temp > 1 then
@@ -15064,7 +15053,7 @@ FUNC_LIST[198] = function()
 					break
 				end
 				rt_store_i32(memory_at_0, GLOBAL_LIST[82].value, 4)
-				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit_and(rt_shr_u32(loc_1, 2), 7))
+				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16133620), bit32.band(rt_shr_u32(loc_1, 2), 7))
 				desired = 1
 				break
 			end
@@ -15077,7 +15066,7 @@ FUNC_LIST[198] = function()
 			loc_1 = GLOBAL_LIST[61].value
 			reg_0 = loc_1
 			loc_1 = rt_load_i32(memory_at_0, loc_1)
-			rt_store_i32(memory_at_0, reg_0, bit_xor(loc_1, 1))
+			rt_store_i32(memory_at_0, reg_0, bit32.bxor(loc_1, 1))
 			while true do
 				if loc_1 == 1 then
 					break
@@ -15340,7 +15329,7 @@ FUNC_LIST[200] = function(loc_0, loc_1, loc_2)
 		loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[90].value)
 		FUNC_LIST[71]()
 		loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[95].value)
-		rt_store_i32(memory_at_0, GLOBAL_LIST[205].value, bit_or((if rt_gt_i32(loc_0, 3) then 1 else 0), (if loc_5 ~= 0 then 1 else 0)))
+		rt_store_i32(memory_at_0, GLOBAL_LIST[205].value, bit32.bor((if rt_gt_i32(loc_0, 3) then 1 else 0), (if loc_5 ~= 0 then 1 else 0)))
 		loc_5 = (if rt_gt_i32(loc_1, 1) then (if loc_3 ~= 0 then loc_1 else 1) else loc_1)
 		loc_1 = (if rt_gt_i32(loc_2, 1) then loc_2 else 1)
 		loc_2 = (if rt_gt_i32(loc_2, 9) then (if loc_3 ~= 2 then 9 else loc_1) else loc_1)
@@ -15873,7 +15862,7 @@ FUNC_LIST[203] = function()
 			end
 			while true do
 				while true do
-					loc_2 = bit_and(rt_add_i32(loc_1, 4294967192), 255)
+					loc_2 = bit32.band(rt_add_i32(loc_1, 4294967192), 255)
 					if loc_2 < 6 then
 						break
 					end
@@ -15892,9 +15881,9 @@ FUNC_LIST[203] = function()
 						end
 						break
 					end
-					loc_2 = rt_div_u32(bit_and(loc_1, 255), 100)
+					loc_2 = rt_div_u32(bit32.band(loc_1, 255), 100)
 					rt_store_i32(memory_at_0, loc_0 + 16, loc_2)
-					rt_store_i32(memory_at_0, loc_0 + 20, bit_and(rt_sub_i32(loc_1, rt_mul_i32(loc_2, 100)), 255))
+					rt_store_i32(memory_at_0, loc_0 + 20, bit32.band(rt_sub_i32(loc_1, rt_mul_i32(loc_2, 100)), 255))
 					loc_4 = GLOBAL_LIST[1].value
 					loc_2 = rt_add_i32(loc_4, 16135840)
 					reg_0 = FUNC_LIST[388](loc_2, 16, rt_add_i32(loc_4, 18375), rt_add_i32(loc_0, 16))
@@ -16013,7 +16002,7 @@ FUNC_LIST[204] = function()
 			rt_store_i64(memory_at_0, loc_0 + 60, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 52, rt_i64_ZERO)
 			loc_1 = rt_load_i32(memory_at_0, loc_0)
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
 			rt_store_i64(memory_at_0, loc_0 + 228, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 240, rt_i64_ZERO)
 			break
@@ -16036,7 +16025,7 @@ FUNC_LIST[204] = function()
 			rt_store_i64(memory_at_0, loc_0 + 348, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 340, rt_i64_ZERO)
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 288)
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
 			rt_store_i64(memory_at_0, loc_0 + 516, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 528, rt_i64_ZERO)
 			break
@@ -16059,7 +16048,7 @@ FUNC_LIST[204] = function()
 			rt_store_i64(memory_at_0, loc_0 + 636, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 628, rt_i64_ZERO)
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 576)
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
 			rt_store_i64(memory_at_0, loc_0 + 804, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 816, rt_i64_ZERO)
 			break
@@ -16082,7 +16071,7 @@ FUNC_LIST[204] = function()
 			rt_store_i64(memory_at_0, loc_0 + 924, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 916, rt_i64_ZERO)
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 864)
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
 			rt_store_i64(memory_at_0, loc_0 + 1092, rt_i64_ZERO)
 			rt_store_i64(memory_at_0, loc_0 + 1104, rt_i64_ZERO)
 			break
@@ -16292,7 +16281,7 @@ FUNC_LIST[204] = function()
 					break
 				end
 				while true do
-					if bit_and(bit_or((if loc_1 ~= 0 then 1 else 0), loc_3), 1) == 0 then
+					if bit32.band(bit32.bor((if loc_1 ~= 0 then 1 else 0), loc_3), 1) == 0 then
 						break
 					end
 					loc_1 = (if loc_1 ~= 0 then 8 else loc_0)
@@ -16670,7 +16659,7 @@ FUNC_LIST[206] = function(loc_0)
 				rt_store_i32_n16(memory_at_0, loc_0 + 2, loc_2)
 				loc_1 = rt_add_i32(loc_3, 4)
 				rt_store_i32(memory_at_0, GLOBAL_LIST[199].value, loc_1)
-				rt_store_i32_n16(memory_at_0, loc_0 + 2, bit_or(rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_3 + 3), 8), loc_2))
+				rt_store_i32_n16(memory_at_0, loc_0 + 2, bit32.bor(rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_3 + 3), 8), loc_2))
 				desired = 1
 				break
 			end
@@ -16963,7 +16952,7 @@ FUNC_LIST[208] = function(loc_0, loc_1)
 				if rt_lt_i32(loc_4, 32) then
 					break
 				end
-				FUNC_LIST[527](rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[227].value, rt_shl_i32(bit_and(loc_4, 31), 2))))
+				FUNC_LIST[527](rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[227].value, rt_shl_i32(bit32.band(loc_4, 31), 2))))
 				loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[226].value)
 				break
 			end
@@ -16992,7 +16981,7 @@ FUNC_LIST[208] = function(loc_0, loc_1)
 												return { [0] = 4, 4, 4, 4, 0, 1, 2, 3, }
 											end)()
 										end
-										temp = br_map[1][bit_and(loc_1, 4194303)] or 5
+										temp = br_map[1][bit32.band(loc_1, 4194303)] or 5
 										if temp < 3 then
 											if temp < 1 then
 												break
@@ -17179,7 +17168,7 @@ FUNC_LIST[211] = function(loc_0)
 				rt_store_i32_n16(memory_at_0, loc_0 + 2, loc_2)
 				loc_3 = rt_add_i32(loc_1, 4)
 				rt_store_i32(memory_at_0, GLOBAL_LIST[199].value, loc_3)
-				rt_store_i32_n16(memory_at_0, loc_0 + 2, bit_or(rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1 + 3), 8), loc_2))
+				rt_store_i32_n16(memory_at_0, loc_0 + 2, bit32.bor(rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1 + 3), 8), loc_2))
 				desired = 1
 				break
 			end
@@ -17268,7 +17257,7 @@ FUNC_LIST[214] = function(loc_0)
 		rt_store_i64(memory_at_0, loc_0 + 60, rt_i64_ZERO)
 		rt_store_i64(memory_at_0, loc_0 + 52, rt_i64_ZERO)
 		loc_1 = rt_load_i32(memory_at_0, loc_0)
-		rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
+		rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
 		rt_store_i64(memory_at_0, loc_0 + 228, rt_i64_ZERO)
 		rt_store_i64(memory_at_0, loc_0 + 240, rt_i64_ZERO)
 		break
@@ -17344,10 +17333,10 @@ FUNC_LIST[218] = function()
 			end
 			while true do
 				loc_1 = rt_shl_i32(1, loc_1)
-				if bit_and(loc_1, 1074792512) ~= 0 then
+				if bit32.band(loc_1, 1074792512) ~= 0 then
 					break
 				end
-				if bit_and(loc_1, 2147516416) == 0 then
+				if bit32.band(loc_1, 2147516416) == 0 then
 					desired = 1
 					break
 				end
@@ -17825,7 +17814,7 @@ FUNC_LIST[232] = function(loc_0, loc_1)
 				while true do
 					while true do
 						reg_0 = FUNC_LIST[46](rt_load_i32_i8(memory_at_0, rt_add_i32(loc_5, loc_6)))
-						loc_4 = bit_and(reg_0, 255)
+						loc_4 = bit32.band(reg_0, 255)
 						if loc_4 == 32 then
 							break
 						end
@@ -18021,7 +18010,7 @@ FUNC_LIST[234] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5, loc_6)
 				rt_store_i32(memory_at_0, loc_6, loc_1)
 				rt_store_i64(memory_at_0, loc_6 + 100, rt_i64_from_u32(0, 1))
 				rt_store_i32_n8(memory_at_0, loc_6 + 16, 0)
-				rt_store_i32(memory_at_0, loc_6 + 4, rt_add_i32(rt_mul_i32(loc_7, bit_xor(loc_8, 4294967295)), loc_2))
+				rt_store_i32(memory_at_0, loc_6 + 4, rt_add_i32(rt_mul_i32(loc_7, bit32.bxor(loc_8, 4294967295)), loc_2))
 				loc_7 = rt_add_i32(loc_7, 1)
 				if loc_7 ~= loc_3 then
 					continue
@@ -18053,12 +18042,12 @@ FUNC_LIST[235] = function(loc_0)
 			if rt_lt_i32(loc_3, 1) then
 				break
 			end
-			loc_4 = bit_and(loc_3, 7)
+			loc_4 = bit32.band(loc_3, 7)
 			while true do
 				if loc_3 < 8 then
 					break
 				end
-				loc_5 = bit_and(loc_3, 2147483640)
+				loc_5 = bit32.band(loc_3, 2147483640)
 				loc_1 = 0
 				loc_2 = 0
 				while true do
@@ -18137,12 +18126,12 @@ FUNC_LIST[236] = function(loc_0, loc_1, loc_2)
 			if rt_lt_i32(loc_5, 1) then
 				break
 			end
-			loc_6 = bit_and(loc_5, 7)
+			loc_6 = bit32.band(loc_5, 7)
 			while true do
 				if loc_5 < 8 then
 					break
 				end
-				loc_7 = bit_and(loc_5, 2147483640)
+				loc_7 = bit32.band(loc_5, 2147483640)
 				loc_3 = 0
 				loc_4 = 0
 				while true do
@@ -18313,7 +18302,7 @@ FUNC_LIST[237] = function(loc_0)
 			while true do
 				while true do
 					loc_3 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 436), loc_2)
-					loc_4 = rt_add_i32(rt_add_i32(loc_0, rt_mul_i32(loc_3, 108)), rt_mul_i32(bit_and(rt_shr_i32(loc_3, 31), loc_1), 108))
+					loc_4 = rt_add_i32(rt_add_i32(loc_0, rt_mul_i32(loc_3, 108)), rt_mul_i32(bit32.band(rt_shr_i32(loc_3, 31), loc_1), 108))
 					loc_5 = rt_load_i32(memory_at_0, loc_4 + 100)
 					if rt_lt_i32(loc_5, 1) then
 						break
@@ -18326,7 +18315,7 @@ FUNC_LIST[237] = function(loc_0)
 							while true do
 								while true do
 									reg_0 = FUNC_LIST[46](rt_load_i32_i8(memory_at_0, rt_add_i32(loc_6, loc_3)))
-									loc_7 = bit_and(reg_0, 255)
+									loc_7 = bit32.band(reg_0, 255)
 									if loc_7 == 32 then
 										break
 									end
@@ -18595,7 +18584,7 @@ FUNC_LIST[244] = function(loc_0, loc_1)
 					while true do
 						reg_0 = FUNC_LIST[46](loc_1)
 						loc_1 = reg_0
-						if rt_add_i32(bit_and(loc_1, 224), 4294967264) > 63 then
+						if rt_add_i32(bit32.band(loc_1, 224), 4294967264) > 63 then
 							break
 						end
 						loc_2 = rt_load_i32(memory_at_0, loc_0 + 100)
@@ -18616,7 +18605,7 @@ FUNC_LIST[244] = function(loc_0, loc_1)
 						end
 						break
 					end
-					loc_2 = bit_and(loc_1, 255)
+					loc_2 = bit32.band(loc_1, 255)
 					if loc_2 == 13 then
 						desired = 2
 						break
@@ -18924,7 +18913,7 @@ FUNC_LIST[252] = function()
 		end
 		while true do
 			loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[232].value)
-			if bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[68].value), loc_0) == 0 then
+			if bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[68].value), loc_0) == 0 then
 				break
 			end
 			loc_1 = GLOBAL_LIST[1].value
@@ -18932,7 +18921,7 @@ FUNC_LIST[252] = function()
 			if loc_2 == 0 then
 				break
 			end
-			if bit_or((if rt_load_i32(memory_at_0, rt_add_i32(loc_1, 16136124)) == 0 then 1 else 0), (if loc_0 ~= 0 then 1 else 0)) == 0 then
+			if bit32.bor((if rt_load_i32(memory_at_0, rt_add_i32(loc_1, 16136124)) == 0 then 1 else 0), (if loc_0 ~= 0 then 1 else 0)) == 0 then
 				break
 			end
 			loc_0 = GLOBAL_LIST[1].value
@@ -19317,7 +19306,7 @@ FUNC_LIST[253] = function(loc_0)
 		while true do
 			loc_1 = GLOBAL_LIST[1].value
 			loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_1, 16137308))
-			loc_3 = bit_and(rt_add_i32(loc_2, 1), 127)
+			loc_3 = bit32.band(rt_add_i32(loc_2, 1), 127)
 			if loc_3 ~= rt_load_i32(memory_at_0, rt_add_i32(loc_1, 16137312)) then
 				break
 			end
@@ -19352,7 +19341,7 @@ FUNC_LIST[254] = function()
 				break
 			end
 			loc_0 = GLOBAL_LIST[1].value
-			rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16137312), bit_and(rt_add_i32(loc_1, 1), 127))
+			rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16137312), bit32.band(rt_add_i32(loc_1, 1), 127))
 			loc_0 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(loc_0, 16137328), loc_1))
 			break
 		end
@@ -19458,7 +19447,7 @@ FUNC_LIST[255] = function(loc_0)
 						FUNC_LIST[242](rt_add_i32(loc_0, 16136688))
 						while true do
 							loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16137308))
-							loc_3 = bit_and(rt_add_i32(loc_1, 1), 127)
+							loc_3 = bit32.band(rt_add_i32(loc_1, 1), 127)
 							if loc_3 ~= rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16137312)) then
 								break
 							end
@@ -19933,7 +19922,7 @@ FUNC_LIST[255] = function(loc_0)
 					if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16137540)) == 0 then
 						break
 					end
-					loc_1 = bit_and(rt_add_i32(loc_1, 208), 255)
+					loc_1 = bit32.band(rt_add_i32(loc_1, 208), 255)
 					if loc_1 > 9 then
 						desired = 2
 						break
@@ -19945,7 +19934,7 @@ FUNC_LIST[255] = function(loc_0)
 					loc_1 = rt_load_i32(memory_at_0, loc_7)
 					while true do
 						while true do
-							loc_3 = bit_and(rt_add_i32(loc_0, 1), 127)
+							loc_3 = bit32.band(rt_add_i32(loc_0, 1), 127)
 							if loc_4 ~= loc_3 then
 								break
 							end
@@ -19981,7 +19970,7 @@ FUNC_LIST[255] = function(loc_0)
 						while true do
 							while true do
 								while true do
-									loc_3 = bit_and(rt_add_i32(loc_0, 1), 127)
+									loc_3 = bit32.band(rt_add_i32(loc_0, 1), 127)
 									if loc_3 ~= loc_4 then
 										break
 									end
@@ -20031,7 +20020,7 @@ FUNC_LIST[255] = function(loc_0)
 					end
 					while true do
 						while true do
-							loc_1 = bit_and(rt_add_i32(loc_0, 1), 127)
+							loc_1 = bit32.band(rt_add_i32(loc_0, 1), 127)
 							if loc_1 ~= loc_4 then
 								break
 							end
@@ -20074,7 +20063,7 @@ FUNC_LIST[255] = function(loc_0)
 				end
 				while true do
 					loc_1 = rt_load_i32(memory_at_0, loc_0 + 8)
-					loc_0 = bit_and(loc_1, 255)
+					loc_0 = bit32.band(loc_1, 255)
 					reg_0 = FUNC_LIST[244](rt_add_i32(GLOBAL_LIST[1].value, 16136688), loc_0)
 					loc_3 = reg_0
 					if loc_3 == 0 then
@@ -20083,7 +20072,7 @@ FUNC_LIST[255] = function(loc_0)
 					while true do
 						loc_2 = GLOBAL_LIST[1].value
 						loc_4 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, 16137308))
-						loc_5 = bit_and(rt_add_i32(loc_4, 1), 127)
+						loc_5 = bit32.band(rt_add_i32(loc_4, 1), 127)
 						if loc_5 ~= rt_load_i32(memory_at_0, rt_add_i32(loc_2, 16137312)) then
 							break
 						end
@@ -20176,7 +20165,7 @@ FUNC_LIST[255] = function(loc_0)
 		FUNC_LIST[242](rt_add_i32(loc_0, 16136688))
 		while true do
 			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16137308))
-			loc_2 = bit_and(rt_add_i32(loc_3, 1), 127)
+			loc_2 = bit32.band(rt_add_i32(loc_3, 1), 127)
 			if loc_2 ~= rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16137312)) then
 				break
 			end
@@ -21031,15 +21020,15 @@ FUNC_LIST[285] = function(loc_0, loc_1, loc_2)
 					if loc_2 == 1 then
 						break
 					end
-					loc_4 = bit_and(loc_2, 1)
-					loc_5 = bit_and(loc_2, 2147483646)
+					loc_4 = bit32.band(loc_2, 1)
+					loc_5 = bit32.band(loc_2, 2147483646)
 					loc_3 = 0
 					while true do
 						loc_6 = rt_add_i32(GLOBAL_LIST[1].value, 16137600)
 						loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_6, rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1), 2)))
-						rt_store_i32_n16(memory_at_0, loc_0, bit_or(bit_or(bit_and(rt_shr_u32(loc_2, 8), 63488), bit_and(rt_shr_u32(loc_2, 5), 2016)), bit_and(rt_shr_u32(loc_2, 3), 31)))
+						rt_store_i32_n16(memory_at_0, loc_0, bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_2, 8), 63488), bit32.band(rt_shr_u32(loc_2, 5), 2016)), bit32.band(rt_shr_u32(loc_2, 3), 31)))
 						loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_6, rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1 + 1), 2)))
-						rt_store_i32_n16(memory_at_0, loc_0, bit_or(bit_or(bit_and(rt_shr_u32(loc_2, 8), 63488), bit_and(rt_shr_u32(loc_2, 5), 2016)), bit_and(rt_shr_u32(loc_2, 3), 31)))
+						rt_store_i32_n16(memory_at_0, loc_0, bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_2, 8), 63488), bit32.band(rt_shr_u32(loc_2, 5), 2016)), bit32.band(rt_shr_u32(loc_2, 3), 31)))
 						loc_1 = rt_add_i32(loc_1, 2)
 						loc_3 = rt_add_i32(loc_3, 2)
 						if loc_3 ~= loc_5 then
@@ -21066,7 +21055,7 @@ FUNC_LIST[285] = function(loc_0, loc_1, loc_2)
 					break
 				end
 				loc_1 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[1].value, 16137600), rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1), 2)))
-				rt_store_i32_n16(memory_at_0, loc_0, bit_or(bit_or(bit_and(rt_shr_u32(loc_1, 8), 63488), bit_and(rt_shr_u32(loc_1, 5), 2016)), bit_and(rt_shr_u32(loc_1, 3), 31)))
+				rt_store_i32_n16(memory_at_0, loc_0, bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_1, 8), 63488), bit32.band(rt_shr_u32(loc_1, 5), 2016)), bit32.band(rt_shr_u32(loc_1, 3), 31)))
 				desired = 0
 				break
 			end
@@ -21080,17 +21069,17 @@ FUNC_LIST[285] = function(loc_0, loc_1, loc_2)
 				if loc_2 == 1 then
 					break
 				end
-				loc_7 = bit_and(loc_2, 1)
+				loc_7 = bit32.band(loc_2, 1)
 				loc_3 = rt_shl_i32(loc_3, 1)
-				loc_4 = bit_and(loc_2, 2147483646)
+				loc_4 = bit32.band(loc_2, 2147483646)
 				loc_6 = 0
 				while true do
 					loc_5 = rt_add_i32(GLOBAL_LIST[1].value, 16137600)
 					loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_5, rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1), 2)))
-					rt_store_i32_n16(memory_at_0, loc_0, bit_or(bit_or(bit_and(rt_shr_u32(loc_2, 8), 63488), bit_and(rt_shr_u32(loc_2, 5), 2016)), bit_and(rt_shr_u32(loc_2, 3), 31)))
+					rt_store_i32_n16(memory_at_0, loc_0, bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_2, 8), 63488), bit32.band(rt_shr_u32(loc_2, 5), 2016)), bit32.band(rt_shr_u32(loc_2, 3), 31)))
 					loc_2 = rt_add_i32(loc_0, loc_3)
 					loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_5, rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1 + 1), 2)))
-					rt_store_i32_n16(memory_at_0, loc_2, bit_or(bit_or(bit_and(rt_shr_u32(loc_0, 8), 63488), bit_and(rt_shr_u32(loc_0, 5), 2016)), bit_and(rt_shr_u32(loc_0, 3), 31)))
+					rt_store_i32_n16(memory_at_0, loc_2, bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_0, 8), 63488), bit32.band(rt_shr_u32(loc_0, 5), 2016)), bit32.band(rt_shr_u32(loc_0, 3), 31)))
 					loc_1 = rt_add_i32(loc_1, 2)
 					loc_0 = rt_add_i32(loc_2, loc_3)
 					loc_6 = rt_add_i32(loc_6, 2)
@@ -21118,7 +21107,7 @@ FUNC_LIST[285] = function(loc_0, loc_1, loc_2)
 				break
 			end
 			loc_1 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[1].value, 16137600), rt_shl_i32(rt_load_i32_u8(memory_at_0, loc_1), 2)))
-			rt_store_i32_n16(memory_at_0, loc_0, bit_or(bit_or(bit_and(rt_shr_u32(loc_1, 8), 63488), bit_and(rt_shr_u32(loc_1, 5), 2016)), bit_and(rt_shr_u32(loc_1, 3), 31)))
+			rt_store_i32_n16(memory_at_0, loc_0, bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_1, 8), 63488), bit32.band(rt_shr_u32(loc_1, 5), 2016)), bit32.band(rt_shr_u32(loc_1, 3), 31)))
 			break
 		end
 		if desired then
@@ -21183,13 +21172,13 @@ FUNC_LIST[286] = function(loc_0, loc_1, loc_2)
 								desired = 3
 								break
 							end
-							loc_6 = bit_or(bit_or(bit_and(rt_shr_u32(loc_6, 8), 63488), bit_and(rt_shr_u32(loc_6, 5), 2016)), bit_and(rt_shr_u32(loc_6, 3), 31))
-							loc_8 = bit_and(loc_7, 7)
+							loc_6 = bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_6, 8), 63488), bit32.band(rt_shr_u32(loc_6, 5), 2016)), bit32.band(rt_shr_u32(loc_6, 3), 31))
+							loc_8 = bit32.band(loc_7, 7)
 							while true do
 								if loc_7 < 8 then
 									break
 								end
-								loc_9 = bit_and(loc_7, 2147483640)
+								loc_9 = bit32.band(loc_7, 2147483640)
 								loc_7 = 0
 								while true do
 									rt_store_i32_n16(memory_at_0, loc_0 + 14, loc_6)
@@ -21259,7 +21248,7 @@ FUNC_LIST[286] = function(loc_0, loc_1, loc_2)
 							desired = 3
 							break
 						end
-						loc_7 = bit_or(bit_or(rt_shl_i32(bit_and(rt_shr_u32(loc_6, 8), 255), loc_9), rt_shl_i32(bit_and(rt_shr_u32(loc_6, 16), 255), loc_8)), rt_shl_i32(bit_and(loc_6, 255), loc_7))
+						loc_7 = bit32.bor(bit32.bor(rt_shl_i32(bit32.band(rt_shr_u32(loc_6, 8), 255), loc_9), rt_shl_i32(bit32.band(rt_shr_u32(loc_6, 16), 255), loc_8)), rt_shl_i32(bit32.band(loc_6, 255), loc_7))
 						loc_6 = 0
 						while true do
 							rt_store_i32(memory_at_0, loc_0, loc_7)
@@ -21571,13 +21560,13 @@ FUNC_LIST[292] = function()
 											desired = 6
 											break
 										end
-										loc_2 = bit_or(bit_or(bit_and(rt_shr_u32(loc_2, 8), 63488), bit_and(rt_shr_u32(loc_2, 5), 2016)), bit_and(rt_shr_u32(loc_2, 3), 31))
-										loc_13 = bit_and(loc_7, 7)
+										loc_2 = bit32.bor(bit32.bor(bit32.band(rt_shr_u32(loc_2, 8), 63488), bit32.band(rt_shr_u32(loc_2, 5), 2016)), bit32.band(rt_shr_u32(loc_2, 3), 31))
+										loc_13 = bit32.band(loc_7, 7)
 										while true do
 											if loc_7 < 8 then
 												break
 											end
-											loc_14 = bit_and(loc_7, 2147483640)
+											loc_14 = bit32.band(loc_7, 2147483640)
 											loc_7 = 0
 											while true do
 												rt_store_i32_n16(memory_at_0, loc_1 + 14, loc_2)
@@ -21647,7 +21636,7 @@ FUNC_LIST[292] = function()
 										desired = 6
 										break
 									end
-									loc_7 = bit_or(bit_or(rt_shl_i32(bit_and(rt_shr_u32(loc_2, 8), 255), loc_14), rt_shl_i32(bit_and(rt_shr_u32(loc_2, 16), 255), loc_13)), rt_shl_i32(bit_and(loc_2, 255), loc_7))
+									loc_7 = bit32.bor(bit32.bor(rt_shl_i32(bit32.band(rt_shr_u32(loc_2, 8), 255), loc_14), rt_shl_i32(bit32.band(rt_shr_u32(loc_2, 16), 255), loc_13)), rt_shl_i32(bit32.band(loc_2, 255), loc_7))
 									loc_2 = 0
 									while true do
 										rt_store_i32(memory_at_0, loc_1, loc_7)
@@ -21758,7 +21747,7 @@ FUNC_LIST[294] = function(loc_0)
 		loc_1 = rt_add_i32(GLOBAL_LIST[240].value, rt_shl_i32(loc_1, 8))
 		loc_2 = 0
 		while true do
-			rt_store_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[1].value, 16137600), rt_shl_i32(loc_2, 2)), bit_or(bit_or(rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(loc_1, rt_load_i32_u8(memory_at_0, loc_0 + 1))), 8), rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(loc_1, rt_load_i32_u8(memory_at_0, loc_0))), 16)), rt_load_i32_u8(memory_at_0, rt_add_i32(loc_1, rt_load_i32_u8(memory_at_0, loc_0 + 2)))))
+			rt_store_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[1].value, 16137600), rt_shl_i32(loc_2, 2)), bit32.bor(bit32.bor(rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(loc_1, rt_load_i32_u8(memory_at_0, loc_0 + 1))), 8), rt_shl_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(loc_1, rt_load_i32_u8(memory_at_0, loc_0))), 16)), rt_load_i32_u8(memory_at_0, rt_add_i32(loc_1, rt_load_i32_u8(memory_at_0, loc_0 + 2)))))
 			loc_0 = rt_add_i32(loc_0, 3)
 			loc_2 = rt_add_i32(loc_2, 1)
 			if loc_2 ~= 256 then
@@ -22115,7 +22104,7 @@ FUNC_LIST[312] = function(loc_0, loc_1)
 					loc_3 = rt_load_i32_u8(memory_at_0, rt_add_i32(loc_0, loc_4))
 					loc_5 = 0
 					rt_store_i32(memory_at_0, loc_0 + 40, 0)
-					loc_4 = (if loc_3 == bit_and(loc_1, 255) then rt_add_i32(loc_4, 1) else 0)
+					loc_4 = (if loc_3 == bit32.band(loc_1, 255) then rt_add_i32(loc_4, 1) else 0)
 					rt_store_i32(memory_at_0, loc_0 + 36, loc_4)
 					desired = 2
 					break
@@ -22188,12 +22177,12 @@ FUNC_LIST[315] = function(loc_0, loc_1)
 	while true do
 		while true do
 			loc_2 = rt_shr_i32(loc_0, 31)
-			reg_0 = rt_shr_u32(rt_sub_i32(bit_xor(loc_0, loc_2), loc_2), 14)
+			reg_0 = rt_shr_u32(rt_sub_i32(bit32.bxor(loc_0, loc_2), loc_2), 14)
 			loc_2 = rt_shr_i32(loc_1, 31)
-			if reg_0 < rt_sub_i32(bit_xor(loc_1, loc_2), loc_2) then
+			if reg_0 < rt_sub_i32(bit32.bxor(loc_1, loc_2), loc_2) then
 				break
 			end
-			reg_0 = bit_xor(rt_shr_i32(bit_xor(loc_1, loc_0), 31), 2147483647)
+			reg_0 = bit32.bxor(rt_shr_i32(bit32.bxor(loc_1, loc_0), 31), 2147483647)
 			desired = 0
 			break
 		end
@@ -22566,7 +22555,7 @@ FUNC_LIST[322] = function(loc_0)
 		GLOBAL_LIST[0].value = loc_1
 		loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[91].value)
 		loc_3 = GLOBAL_LIST[256].value
-		rt_store_i32(memory_at_0, loc_1, rt_load_i32(memory_at_0, rt_add_i32((if bit_and(loc_2, 4294967291) ~= 0 then GLOBAL_LIST[257].value else loc_3), rt_shl_i32(rt_rem_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 8), 2))))
+		rt_store_i32(memory_at_0, loc_1, rt_load_i32(memory_at_0, rt_add_i32((if bit32.band(loc_2, 4294967291) ~= 0 then GLOBAL_LIST[257].value else loc_3), rt_shl_i32(rt_rem_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 8), 2))))
 		loc_2 = GLOBAL_LIST[1].value
 		loc_3 = GLOBAL_LIST[258].value
 		reg_0 = FUNC_LIST[2](loc_3, 160, rt_add_i32(loc_2, 18640), loc_1)
@@ -22596,7 +22585,7 @@ FUNC_LIST[323] = function(loc_0)
 				end
 				loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[90].value)
 				loc_1 = GLOBAL_LIST[261].value
-				FUNC_LIST[702](0, rt_load_i32(memory_at_0, rt_add_i32((if loc_0 == 2 then GLOBAL_LIST[262].value else loc_1), bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 28))))
+				FUNC_LIST[702](0, rt_load_i32(memory_at_0, rt_add_i32((if loc_0 == 2 then GLOBAL_LIST[262].value else loc_1), bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 28))))
 				FUNC_LIST[82](105)
 				break
 			end
@@ -23067,7 +23056,7 @@ FUNC_LIST[339] = function(loc_0)
 		loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[90].value)
 		loc_3 = GLOBAL_LIST[268].value
 		loc_4 = GLOBAL_LIST[269].value
-		loc_1 = bit_and((if loc_1 < 5 then 1 else 0), (if loc_2 ~= 2 then 1 else 0))
+		loc_1 = bit32.band((if loc_1 < 5 then 1 else 0), (if loc_2 ~= 2 then 1 else 0))
 		rt_store_i32(memory_at_0, GLOBAL_LIST[247].value, (if loc_1 ~= 0 then loc_4 else loc_3))
 		loc_3 = rt_load_i32_u16(memory_at_0, (if loc_1 ~= 0 then rt_add_i32(loc_4, 20) else rt_add_i32(loc_3, 20)))
 		rt_store_i32_n16(memory_at_0, GLOBAL_LIST[248].value, loc_3)
@@ -23096,15 +23085,15 @@ FUNC_LIST[340] = function()
 				end
 				while true do
 					while true do
-						if bit_and(rt_shl_i32(1, loc_0), 62) ~= 0 then
+						if bit32.band(rt_shl_i32(1, loc_0), 62) ~= 0 then
 							break
 						end
 						loc_0 = rt_shl_i32(1, loc_0)
-						if bit_and(loc_0, 384) ~= 0 then
+						if bit32.band(loc_0, 384) ~= 0 then
 							desired = 3
 							break
 						end
-						if bit_and(loc_0, 576) == 0 then
+						if bit32.band(loc_0, 576) == 0 then
 							desired = 2
 							break
 						end
@@ -25199,7 +25188,7 @@ FUNC_LIST[365] = function(loc_0)
 			end
 			break
 		end
-		loc_3 = bit_and(loc_2, 3)
+		loc_3 = bit32.band(loc_2, 3)
 		loc_4 = 0
 		loc_5 = loc_1
 		while true do
@@ -25207,7 +25196,7 @@ FUNC_LIST[365] = function(loc_0)
 				if loc_2 < 4 then
 					break
 				end
-				loc_6 = bit_and(loc_2, 4294967292)
+				loc_6 = bit32.band(loc_2, 4294967292)
 				loc_4 = 0
 				loc_5 = loc_1
 				loc_7 = 0
@@ -25377,7 +25366,7 @@ FUNC_LIST[366] = function(loc_0)
 								end
 								loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[90].value)
 								loc_3 = GLOBAL_LIST[261].value
-								FUNC_LIST[702](0, rt_load_i32(memory_at_0, rt_add_i32((if loc_0 == 2 then GLOBAL_LIST[262].value else loc_3), bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 28))))
+								FUNC_LIST[702](0, rt_load_i32(memory_at_0, rt_add_i32((if loc_0 == 2 then GLOBAL_LIST[262].value else loc_3), bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 28))))
 								FUNC_LIST[82](105)
 								desired = 2
 								break
@@ -25391,7 +25380,7 @@ FUNC_LIST[366] = function(loc_0)
 							FUNC_LIST[702](0, 23)
 							loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[91].value)
 							loc_3 = GLOBAL_LIST[256].value
-							rt_store_i32(memory_at_0, loc_1, rt_load_i32(memory_at_0, rt_add_i32((if bit_and(loc_0, 4294967291) ~= 0 then GLOBAL_LIST[257].value else loc_3), rt_shl_i32(rt_rem_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 8), 2))))
+							rt_store_i32(memory_at_0, loc_1, rt_load_i32(memory_at_0, rt_add_i32((if bit32.band(loc_0, 4294967291) ~= 0 then GLOBAL_LIST[257].value else loc_3), rt_shl_i32(rt_rem_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[52].value), 8), 2))))
 							loc_0 = GLOBAL_LIST[1].value
 							loc_2 = GLOBAL_LIST[258].value
 							reg_0 = FUNC_LIST[2](loc_2, 160, rt_add_i32(loc_0, 18640), loc_1)
@@ -25487,7 +25476,7 @@ FUNC_LIST[366] = function(loc_0)
 							end
 							while true do
 								loc_3 = rt_load_i32(memory_at_0, loc_0 + 4)
-								if bit_and(loc_3, 1) == 0 then
+								if bit32.band(loc_3, 1) == 0 then
 									break
 								end
 								loc_3 = GLOBAL_LIST[1].value
@@ -25504,7 +25493,7 @@ FUNC_LIST[366] = function(loc_0)
 								break
 							end
 							while true do
-								if bit_and(loc_3, 2) == 0 then
+								if bit32.band(loc_3, 2) == 0 then
 									break
 								end
 								loc_3 = GLOBAL_LIST[1].value
@@ -25525,7 +25514,7 @@ FUNC_LIST[366] = function(loc_0)
 								desired = 3
 								break
 							end
-							if bit_and(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 4), loc_3), 1) == 0 then
+							if bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 4), loc_3), 1) == 0 then
 								desired = 3
 								break
 							end
@@ -25678,7 +25667,7 @@ FUNC_LIST[366] = function(loc_0)
 					end
 					while true do
 						loc_3 = rt_load_i32(memory_at_0, loc_0 + 4)
-						if bit_and(loc_3, 1) == 0 then
+						if bit32.band(loc_3, 1) == 0 then
 							break
 						end
 						loc_3 = GLOBAL_LIST[1].value
@@ -25695,7 +25684,7 @@ FUNC_LIST[366] = function(loc_0)
 						break
 					end
 					loc_4 = 0
-					if bit_and(loc_3, 2) == 0 then
+					if bit32.band(loc_3, 2) == 0 then
 						break
 					end
 					loc_0 = GLOBAL_LIST[1].value
@@ -25972,7 +25961,7 @@ FUNC_LIST[366] = function(loc_0)
 						if loc_2 ~= rt_load_i32(memory_at_0, GLOBAL_LIST[291].value) then
 							break
 						end
-						if bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[11].value), rt_load_i32(memory_at_0, GLOBAL_LIST[233].value)) ~= 0 then
+						if bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[11].value), rt_load_i32(memory_at_0, GLOBAL_LIST[233].value)) ~= 0 then
 							desired = 1
 							break
 						end
@@ -25992,7 +25981,7 @@ FUNC_LIST[366] = function(loc_0)
 						if loc_2 ~= rt_load_i32(memory_at_0, GLOBAL_LIST[292].value) then
 							break
 						end
-						if bit_or(rt_load_i32(memory_at_0, GLOBAL_LIST[11].value), rt_load_i32(memory_at_0, GLOBAL_LIST[233].value)) ~= 0 then
+						if bit32.bor(rt_load_i32(memory_at_0, GLOBAL_LIST[11].value), rt_load_i32(memory_at_0, GLOBAL_LIST[233].value)) ~= 0 then
 							desired = 1
 							break
 						end
@@ -26277,7 +26266,7 @@ FUNC_LIST[366] = function(loc_0)
 					loc_0 = rt_load_i32_u16(memory_at_0, GLOBAL_LIST[248].value)
 					while true do
 						while true do
-							if bit_and(loc_0, 65535) ~= 0 then
+							if bit32.band(loc_0, 65535) ~= 0 then
 								break
 							end
 							loc_0 = rt_load_i32_u16(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[247].value))
@@ -26468,7 +26457,7 @@ FUNC_LIST[366] = function(loc_0)
 						if loc_0 > 12 then
 							break
 						end
-						if bit_and(rt_shl_i32(1, loc_0), 6145) ~= 0 then
+						if bit32.band(rt_shl_i32(1, loc_0), 6145) ~= 0 then
 							desired = 3
 							break
 						end
@@ -26627,14 +26616,14 @@ FUNC_LIST[367] = function()
 						end
 						break
 					end
-					loc_5 = bit_and(loc_3, 3)
+					loc_5 = bit32.band(loc_3, 3)
 					loc_6 = 0
 					loc_4 = loc_1
 					while true do
 						if loc_3 < 4 then
 							break
 						end
-						loc_7 = bit_and(loc_3, 4294967292)
+						loc_7 = bit32.band(loc_3, 4294967292)
 						loc_6 = 0
 						loc_4 = loc_1
 						loc_8 = 0
@@ -27050,7 +27039,7 @@ FUNC_LIST[368] = function()
 			end
 			rt_store_i32_n16(memory_at_0, GLOBAL_LIST[305].value, 8)
 			loc_0 = GLOBAL_LIST[303].value
-			rt_store_i32_n16(memory_at_0, loc_0, bit_xor(rt_load_i32_u16(memory_at_0, loc_0), 1))
+			rt_store_i32_n16(memory_at_0, loc_0, bit32.bxor(rt_load_i32_u16(memory_at_0, loc_0), 1))
 			break
 		end
 		break
@@ -27332,7 +27321,7 @@ FUNC_LIST[376] = function(loc_0, loc_1)
 						break
 					end
 					loc_1 = rt_add_i32(loc_7, loc_6)
-					loc_6 = rt_add_i32(loc_3, bit_xor(loc_6, 4294967295))
+					loc_6 = rt_add_i32(loc_3, bit32.bxor(loc_6, 4294967295))
 					rt_store_i32_n8(memory_at_0, rt_add_i32(loc_1, loc_6), 0)
 					reg_0 = FUNC_LIST[86](loc_1, loc_5, loc_6)
 					break
@@ -27838,7 +27827,7 @@ FUNC_LIST[384] = function(loc_0, loc_1, loc_2)
 				break
 			end
 			loc_0 = rt_add_i32(loc_0, loc_4)
-			loc_2 = rt_add_i32(loc_2, bit_xor(loc_4, 4294967295))
+			loc_2 = rt_add_i32(loc_2, bit32.bxor(loc_4, 4294967295))
 			rt_store_i32_n8(memory_at_0, rt_add_i32(loc_0, loc_2), 0)
 			reg_1 = FUNC_LIST[86](loc_0, loc_1, loc_2)
 			reg_1 = FUNC_LIST[45](reg_1)
@@ -28043,7 +28032,7 @@ FUNC_LIST[389] = function(loc_0)
 				reg_0 = FUNC_LIST[465](loc_3, loc_2, loc_1, 0, 1, 1)
 				loc_1 = reg_0
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_4), 7) ~= 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_4), 7) ~= 0 then
 						break
 					end
 					if rt_load_i32(memory_at_0, loc_0 + 12) == 5 then
@@ -28129,7 +28118,7 @@ FUNC_LIST[389] = function(loc_0)
 			reg_0 = FUNC_LIST[465](loc_4, loc_3, loc_2, loc_1, 1, 4294967295)
 			loc_1 = reg_0
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_5), 7) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_5), 7) ~= 0 then
 					break
 				end
 				if rt_load_i32(memory_at_0, loc_0 + 12) == 5 then
@@ -28246,7 +28235,7 @@ FUNC_LIST[389] = function(loc_0)
 			if loc_1 > 5 then
 				break
 			end
-			if bit_and(rt_shl_i32(1, loc_1), 44) == 0 then
+			if bit32.band(rt_shl_i32(1, loc_1), 44) == 0 then
 				break
 			end
 			rt_store_i32(memory_at_0, loc_0 + 28, 8192)
@@ -29724,10 +29713,10 @@ FUNC_LIST[395] = function(loc_0)
 				end
 				while true do
 					loc_1 = rt_shl_i32(1, loc_1)
-					if bit_and(loc_1, 74) ~= 0 then
+					if bit32.band(loc_1, 74) ~= 0 then
 						break
 					end
-					if bit_and(loc_1, 33) == 0 then
+					if bit32.band(loc_1, 33) == 0 then
 						desired = 1
 						break
 					end
@@ -30076,14 +30065,14 @@ FUNC_LIST[398] = function(loc_0, loc_1)
 				while true do
 					while true do
 						loc_4 = rt_shl_i32(1, loc_3)
-						if bit_and(loc_4, 65) ~= 0 then
+						if bit32.band(loc_4, 65) ~= 0 then
 							break
 						end
-						if bit_and(loc_4, 132) ~= 0 then
+						if bit32.band(loc_4, 132) ~= 0 then
 							desired = 3
 							break
 						end
-						if bit_and(rt_shl_i32(1, loc_3), 258) == 0 then
+						if bit32.band(rt_shl_i32(1, loc_3), 258) == 0 then
 							desired = 2
 							break
 						end
@@ -30169,7 +30158,7 @@ FUNC_LIST[398] = function(loc_0, loc_1)
 									desired = 5
 									break
 								end
-								if bit_and(rt_shl_i32(1, loc_2), 469762050) == 0 then
+								if bit32.band(rt_shl_i32(1, loc_2), 469762050) == 0 then
 									desired = 5
 									break
 								end
@@ -30182,7 +30171,7 @@ FUNC_LIST[398] = function(loc_0, loc_1)
 								end
 								break
 							end
-							if bit_and(rt_add_i32(loc_2, 4294967179), 65535) >= 2 then
+							if bit32.band(rt_add_i32(loc_2, 4294967179), 65535) >= 2 then
 								desired = 3
 								break
 							end
@@ -30497,7 +30486,7 @@ FUNC_LIST[401] = function(loc_0, loc_1)
 				while true do
 					while true do
 						loc_3 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 84), rt_shl_i32(loc_2, 2)))
-						if bit_and(rt_load_i32_u8(memory_at_0, loc_3 + 16), 4) == 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, loc_3 + 16), 4) == 0 then
 							break
 						end
 						FUNC_LIST[516](loc_3)
@@ -30520,7 +30509,7 @@ FUNC_LIST[401] = function(loc_0, loc_1)
 							end
 							break
 						end
-						FUNC_LIST[401](loc_4, bit_and(rt_shr_u32(rt_load_i32_u16(memory_at_0, loc_3 + 16), 6), 1))
+						FUNC_LIST[401](loc_4, bit32.band(rt_shr_u32(rt_load_i32_u16(memory_at_0, loc_3 + 16), 6), 1))
 						break
 					end
 					if desired then
@@ -30554,7 +30543,7 @@ FUNC_LIST[401] = function(loc_0, loc_1)
 			while true do
 				while true do
 					loc_3 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 84), rt_shl_i32(loc_2, 2)))
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_3 + 16), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_3 + 16), 4) == 0 then
 						break
 					end
 					FUNC_LIST[516](loc_3)
@@ -30577,7 +30566,7 @@ FUNC_LIST[401] = function(loc_0, loc_1)
 						end
 						break
 					end
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_3 + 16), 64) ~= 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_3 + 16), 64) ~= 0 then
 						break
 					end
 					FUNC_LIST[401](loc_4, loc_1)
@@ -30656,10 +30645,10 @@ FUNC_LIST[404] = function(loc_0)
 			end
 			while true do
 				loc_2 = rt_load_i32(memory_at_0, loc_0 + 104)
-				if bit_and(loc_2, 64) == 0 then
+				if bit32.band(loc_2, 64) == 0 then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(loc_2, 4294967231))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(loc_2, 4294967231))
 				reg_0 = 1
 				desired = 0
 				break
@@ -30800,14 +30789,14 @@ FUNC_LIST[405] = function(loc_0)
 				end
 				loc_3 = GLOBAL_LIST[353].value
 				while true do
-					if bit_and(loc_2, 16384) == 0 then
+					if bit32.band(loc_2, 16384) == 0 then
 						break
 					end
 					if rt_load_i32(memory_at_0, loc_3) == 0 then
 						break
 					end
 					loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[354].value)
-					rt_store_i32(memory_at_0, loc_0 + 104, bit_or(loc_2, 2097152))
+					rt_store_i32(memory_at_0, loc_0 + 104, bit32.bor(loc_2, 2097152))
 					loc_2 = rt_load_i32(memory_at_0, loc_0 + 20)
 					rt_store_i32(memory_at_0, loc_0 + 20, rt_add_i32((if rt_lt_i32(loc_2, loc_1) then 262144 else 4294705152), loc_2))
 					reg_0 = 1
@@ -30858,9 +30847,9 @@ FUNC_LIST[405] = function(loc_0)
 				end
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(loc_2, 4292870143))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(loc_2, 4292870143))
 			loc_1 = 1
-			if bit_and(loc_2, 16384) ~= 0 then
+			if bit32.band(loc_2, 16384) ~= 0 then
 				break
 			end
 			rt_store_i32(memory_at_0, loc_0 + 20, rt_load_i32(memory_at_0, loc_0 + 56))
@@ -30898,7 +30887,7 @@ FUNC_LIST[406] = function(loc_0)
 			break
 		end
 		reg_1 = FUNC_LIST[70]()
-		rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+		rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 		reg_0 = 1
 		break
 	end
@@ -30975,7 +30964,7 @@ FUNC_LIST[407] = function(loc_0)
 				end
 				break
 			end
-			loc_5 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[358].value, bit_and(rt_shr_u32(loc_4, 28), 8)), rt_shl_i32((if rt_gt_i32(loc_2, 0) then 1 else 0), 2)))
+			loc_5 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(GLOBAL_LIST[358].value, bit32.band(rt_shr_u32(loc_4, 28), 8)), rt_shl_i32((if rt_gt_i32(loc_2, 0) then 1 else 0), 2)))
 			rt_store_i32(memory_at_0, loc_0 + 112, loc_5)
 			if loc_5 == loc_1 then
 				break
@@ -30985,7 +30974,7 @@ FUNC_LIST[407] = function(loc_0)
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
-			rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+			rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 			desired = 0
 			break
 		end
@@ -31003,9 +30992,9 @@ FUNC_LIST[407] = function(loc_0)
 					break
 				end
 				loc_3 = rt_shr_i32(loc_4, 31)
-				reg_0 = rt_sub_i32(bit_xor(loc_4, loc_3), loc_3)
+				reg_0 = rt_sub_i32(bit32.bxor(loc_4, loc_3), loc_3)
 				loc_4 = rt_shr_i32(loc_2, 31)
-				if reg_0 > rt_sub_i32(bit_xor(loc_2, loc_4), loc_4) then
+				if reg_0 > rt_sub_i32(bit32.bxor(loc_2, loc_4), loc_4) then
 					break
 				end
 				loc_2 = loc_5
@@ -31041,7 +31030,7 @@ FUNC_LIST[407] = function(loc_0)
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
-			rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+			rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 			desired = 0
 			break
 		end
@@ -31062,7 +31051,7 @@ FUNC_LIST[407] = function(loc_0)
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
-			rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+			rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 			desired = 0
 			break
 		end
@@ -31082,7 +31071,7 @@ FUNC_LIST[407] = function(loc_0)
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
-			rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+			rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 			desired = 0
 			break
 		end
@@ -31099,7 +31088,7 @@ FUNC_LIST[407] = function(loc_0)
 						while true do
 							while true do
 								reg_0 = FUNC_LIST[70]()
-								if bit_and(reg_0, 1) == 0 then
+								if bit32.band(reg_0, 1) == 0 then
 									break
 								end
 								while true do
@@ -31421,7 +31410,7 @@ FUNC_LIST[407] = function(loc_0)
 						break
 					end
 					reg_1 = FUNC_LIST[70]()
-					rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+					rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 					desired = 0
 					break
 				end
@@ -31442,7 +31431,7 @@ FUNC_LIST[407] = function(loc_0)
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
-			rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+			rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 			desired = 0
 			break
 		end
@@ -31453,7 +31442,7 @@ FUNC_LIST[407] = function(loc_0)
 			break
 		end
 		reg_1 = FUNC_LIST[70]()
-		rt_store_i32(memory_at_0, loc_0 + 116, bit_and(reg_1, 15))
+		rt_store_i32(memory_at_0, loc_0 + 116, bit32.band(reg_1, 15))
 		break
 	end
 end
@@ -31465,7 +31454,7 @@ FUNC_LIST[408] = function(loc_0, loc_1)
 	local desired
 	while true do
 		loc_2 = rt_load_i32(memory_at_0, loc_0 + 136)
-		loc_3 = bit_and(rt_add_i32(loc_2, 4294967295), 3)
+		loc_3 = bit32.band(rt_add_i32(loc_2, 4294967295), 3)
 		loc_4 = 0
 		while true do
 			while true do
@@ -31517,7 +31506,7 @@ FUNC_LIST[408] = function(loc_0, loc_1)
 							end
 							break
 						end
-						loc_2 = bit_and(rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 136), 1), 3)
+						loc_2 = bit32.band(rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 136), 1), 3)
 						rt_store_i32(memory_at_0, loc_0 + 136, loc_2)
 						continue
 					end
@@ -31569,7 +31558,7 @@ FUNC_LIST[408] = function(loc_0, loc_1)
 						end
 						break
 					end
-					loc_2 = bit_and(rt_add_i32(loc_2, 1), 3)
+					loc_2 = bit32.band(rt_add_i32(loc_2, 1), 3)
 					rt_store_i32(memory_at_0, loc_0 + 136, loc_2)
 					continue
 				end
@@ -31604,7 +31593,7 @@ FUNC_LIST[409] = function(loc_0)
 	while true do
 		loc_1 = rt_sub_i32(GLOBAL_LIST[0].value, 64)
 		GLOBAL_LIST[0].value = loc_1
-		rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
+		rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
 		while true do
 			while true do
 				loc_2 = GLOBAL_LIST[359].value
@@ -31667,7 +31656,7 @@ FUNC_LIST[409] = function(loc_0)
 end
 FUNC_LIST[410] = function(loc_0)
 	while true do
-		rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
+		rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
 		break
 	end
 end
@@ -31686,11 +31675,11 @@ FUNC_LIST[411] = function(loc_0)
 					if loc_1 == 0 then
 						break
 					end
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) == 0 then
 						break
 					end
 					rt_store_i32(memory_at_0, loc_0 + 120, loc_1)
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 104), 32) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 104), 32) == 0 then
 						desired = 2
 						break
 					end
@@ -31886,7 +31875,7 @@ FUNC_LIST[412] = function(loc_0)
 				break
 			end
 			loc_3 = 3758096384
-			loc_2 = bit_and(rt_load_i32(memory_at_0, loc_0 + 32), 3758096384)
+			loc_2 = bit32.band(rt_load_i32(memory_at_0, loc_0 + 32), 3758096384)
 			rt_store_i32(memory_at_0, loc_0 + 32, loc_2)
 			while true do
 				loc_1 = rt_sub_i32(loc_2, rt_shl_i32(loc_1, 29))
@@ -31921,7 +31910,7 @@ FUNC_LIST[412] = function(loc_0)
 				if loc_1 == 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) ~= 0 then
 					desired = 1
 					break
 				end
@@ -31934,7 +31923,7 @@ FUNC_LIST[412] = function(loc_0)
 				break
 			end
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 136)
-			loc_4 = bit_and(rt_add_i32(loc_1, 4294967295), 3)
+			loc_4 = bit32.band(rt_add_i32(loc_1, 4294967295), 3)
 			loc_2 = 0
 			while true do
 				while true do
@@ -31971,7 +31960,7 @@ FUNC_LIST[412] = function(loc_0)
 							end
 							break
 						end
-						loc_1 = bit_and(rt_add_i32(loc_1, 1), 3)
+						loc_1 = bit32.band(rt_add_i32(loc_1, 1), 3)
 						rt_store_i32(memory_at_0, loc_0 + 136, loc_1)
 						continue
 					end
@@ -32012,10 +32001,10 @@ FUNC_LIST[412] = function(loc_0)
 		while true do
 			while true do
 				loc_2 = rt_load_i32(memory_at_0, loc_0 + 104)
-				if bit_and(loc_2, 128) == 0 then
+				if bit32.band(loc_2, 128) == 0 then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(loc_2, 4294967167))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(loc_2, 4294967167))
 				loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[185].value)
 				loc_2 = GLOBAL_LIST[96].value
 				if loc_1 == 4 then
@@ -32117,7 +32106,7 @@ FUNC_LIST[412] = function(loc_0)
 					break
 				end
 				reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 44))
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_or(rt_load_i32(memory_at_0, loc_0 + 104), 128))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_0 + 104), 128))
 				desired = 0
 				break
 			end
@@ -32210,10 +32199,10 @@ FUNC_LIST[413] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
-			if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
@@ -32238,12 +32227,12 @@ FUNC_LIST[414] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			loc_1 = reg_1
 			rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32295,11 +32284,11 @@ FUNC_LIST[415] = function(loc_0)
 					end
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 				reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 				loc_1 = reg_1
 				rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32364,11 +32353,11 @@ FUNC_LIST[416] = function(loc_0)
 					end
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 				reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 				loc_1 = reg_1
 				rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32406,10 +32395,10 @@ FUNC_LIST[417] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
-			if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
@@ -32461,10 +32450,10 @@ FUNC_LIST[418] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
-			if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
@@ -32515,12 +32504,12 @@ FUNC_LIST[419] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32550,13 +32539,13 @@ FUNC_LIST[420] = function(loc_0)
 				if loc_1 == 0 then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 				reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 				rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 				while true do
 					while true do
 						loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-						if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 							break
 						end
 						reg_1 = FUNC_LIST[70]()
@@ -32633,12 +32622,12 @@ FUNC_LIST[421] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32688,13 +32677,13 @@ FUNC_LIST[422] = function(loc_0)
 				if loc_1 == 0 then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 				reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 				rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 				while true do
 					while true do
 						loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-						if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 							break
 						end
 						reg_1 = FUNC_LIST[70]()
@@ -32769,12 +32758,12 @@ FUNC_LIST[423] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32844,12 +32833,12 @@ FUNC_LIST[425] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -32882,7 +32871,7 @@ FUNC_LIST[426] = function(loc_0)
 	local desired
 	while true do
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[52].value), 3) ~= 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[52].value), 3) ~= 0 then
 				break
 			end
 			FUNC_LIST[537](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_0 + 20))
@@ -32891,7 +32880,7 @@ FUNC_LIST[426] = function(loc_0)
 			rt_store_i32(memory_at_0, loc_1 + 80, 65536)
 			reg_0 = FUNC_LIST[70]()
 			loc_2 = reg_0
-			loc_2 = rt_sub_i32(rt_load_i32(memory_at_0, loc_1 + 96), bit_and(loc_2, 3))
+			loc_2 = rt_sub_i32(rt_load_i32(memory_at_0, loc_1 + 96), bit32.band(loc_2, 3))
 			rt_store_i32(memory_at_0, loc_1 + 96, (if rt_gt_i32(loc_2, 1) then loc_2 else 1))
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 152)
 			if loc_1 == 0 then
@@ -32944,7 +32933,7 @@ FUNC_LIST[426] = function(loc_0)
 				break
 			end
 			loc_3 = GLOBAL_LIST[39].value
-			loc_2 = bit_and(rt_shr_u32(loc_2, 17), 32764)
+			loc_2 = bit32.band(rt_shr_u32(loc_2, 17), 32764)
 			reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), loc_2)))
 			rt_store_i32(memory_at_0, loc_0 + 72, reg_1)
 			loc_3 = GLOBAL_LIST[38].value
@@ -32973,11 +32962,11 @@ FUNC_LIST[427] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -33003,12 +32992,12 @@ FUNC_LIST[428] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -33054,7 +33043,7 @@ FUNC_LIST[429] = function(loc_0)
 	while true do
 		loc_1 = 1
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 106), 16) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 106), 16) == 0 then
 				break
 			end
 			if rt_load_i32(memory_at_0, loc_0 + 96) ~= 4294967295 then
@@ -33070,7 +33059,7 @@ FUNC_LIST[429] = function(loc_0)
 			reg_0 = loc_3
 			loc_3 = rt_shr_i32(loc_3, 31)
 			loc_2 = rt_add_i32(rt_load_i32(memory_at_0, loc_2 + 64), rt_load_i32(memory_at_0, GLOBAL_LIST[126].value + 340))
-			if rt_gt_i32(rt_sub_i32(bit_xor(reg_0, loc_3), loc_3), loc_2) then
+			if rt_gt_i32(rt_sub_i32(bit32.bxor(reg_0, loc_3), loc_3), loc_2) then
 				break
 			end
 			loc_3 = GLOBAL_LIST[363].value
@@ -33078,7 +33067,7 @@ FUNC_LIST[429] = function(loc_0)
 			loc_3 = rt_sub_i32(loc_5, rt_load_i32(memory_at_0, loc_3))
 			reg_0 = loc_3
 			loc_3 = rt_shr_i32(loc_3, 31)
-			if rt_sub_i32(bit_xor(reg_0, loc_3), loc_3) > loc_2 then
+			if rt_sub_i32(bit32.bxor(reg_0, loc_3), loc_3) > loc_2 then
 				break
 			end
 			loc_1 = GLOBAL_LIST[364].value
@@ -33178,10 +33167,10 @@ FUNC_LIST[430] = function(loc_0)
 						if loc_1 == 0 then
 							break
 						end
-						rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+						rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 						reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 						rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
-						if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 							break
 						end
 						reg_1 = FUNC_LIST[70]()
@@ -33278,7 +33267,7 @@ FUNC_LIST[433] = function(loc_0)
 			loc_2 = rt_load_i32(memory_at_0, loc_1 + 32)
 			FUNC_LIST[517](loc_0)
 			loc_3 = GLOBAL_LIST[39].value
-			loc_2 = bit_and(rt_shr_u32(loc_2, 17), 32764)
+			loc_2 = bit32.band(rt_shr_u32(loc_2, 17), 32764)
 			reg_1 = rt_load_i32(memory_at_0, loc_1 + 12)
 			reg_2 = FUNC_LIST[314](1572864, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), loc_2)))
 			rt_store_i32(memory_at_0, loc_0 + 12, rt_add_i32(reg_1, reg_2))
@@ -33312,12 +33301,12 @@ FUNC_LIST[435] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -33352,12 +33341,12 @@ FUNC_LIST[436] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -33381,7 +33370,7 @@ FUNC_LIST[436] = function(loc_0)
 			loc_3 = rt_load_i32(memory_at_0, loc_0 + 32)
 			loc_4 = GLOBAL_LIST[39].value
 			reg_1 = rt_load_i32(memory_at_0, loc_2 + 12)
-			loc_2 = bit_and(rt_shr_u32(loc_3, 17), 32764)
+			loc_2 = bit32.band(rt_shr_u32(loc_3, 17), 32764)
 			reg_2 = FUNC_LIST[314](1572864, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), loc_2)))
 			rt_store_i32(memory_at_0, loc_1 + 12, rt_sub_i32(reg_1, reg_2))
 			loc_3 = GLOBAL_LIST[38].value
@@ -33405,10 +33394,10 @@ FUNC_LIST[437] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
-			if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
@@ -33444,12 +33433,12 @@ FUNC_LIST[438] = function(loc_0)
 				end
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			loc_1 = reg_1
 			rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 120)
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_2 + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_2 + 106), 4) == 0 then
 				break
 			end
 			reg_0 = FUNC_LIST[70]()
@@ -33466,7 +33455,7 @@ FUNC_LIST[438] = function(loc_0)
 		loc_0 = reg_0
 		loc_1 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 32), 134217728)
 		rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
-		loc_1 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_1 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1)))
 		rt_store_i32(memory_at_0, loc_0 + 72, reg_1)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_1)))
@@ -33498,12 +33487,12 @@ FUNC_LIST[439] = function(loc_0)
 				end
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			loc_1 = reg_1
 			rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 120)
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_2 + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_2 + 106), 4) == 0 then
 				break
 			end
 			reg_0 = FUNC_LIST[70]()
@@ -33520,7 +33509,7 @@ FUNC_LIST[439] = function(loc_0)
 		loc_0 = reg_0
 		loc_1 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 32), 4026531840)
 		rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
-		loc_1 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_1 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1)))
 		rt_store_i32(memory_at_0, loc_0 + 72, reg_1)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_1)))
@@ -33555,11 +33544,11 @@ FUNC_LIST[440] = function(loc_0)
 				end
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			rt_store_i32(memory_at_0, loc_0 + 32, reg_1)
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 120)
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[70]()
@@ -33575,7 +33564,7 @@ FUNC_LIST[440] = function(loc_0)
 		loc_3 = rt_add_i32(rt_load_i32(memory_at_0, loc_1 + 32), 4227858432)
 		rt_store_i32(memory_at_0, loc_1 + 32, loc_3)
 		loc_4 = GLOBAL_LIST[39].value
-		loc_3 = bit_and(rt_shr_u32(loc_3, 17), 32764)
+		loc_3 = bit32.band(rt_shr_u32(loc_3, 17), 32764)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_1 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), loc_3)))
 		rt_store_i32(memory_at_0, loc_1 + 72, reg_1)
 		loc_5 = GLOBAL_LIST[38].value
@@ -33585,7 +33574,7 @@ FUNC_LIST[440] = function(loc_0)
 		loc_0 = reg_0
 		loc_1 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 32), 67108864)
 		rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
-		loc_1 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_1 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), loc_1)))
 		rt_store_i32(memory_at_0, loc_0 + 72, reg_1)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(loc_5, loc_1)))
@@ -33606,7 +33595,7 @@ FUNC_LIST[441] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_or(rt_load_i32(memory_at_0, loc_0 + 104), 16777216))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_0 + 104), 16777216))
 			FUNC_LIST[702](loc_0, rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 24))
 			while true do
 				while true do
@@ -33624,11 +33613,11 @@ FUNC_LIST[441] = function(loc_0)
 					end
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 				reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_2 + 12), rt_load_i32(memory_at_0, loc_2 + 16))
 				loc_2 = reg_1
 				rt_store_i32(memory_at_0, loc_0 + 32, loc_2)
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -33643,7 +33632,7 @@ FUNC_LIST[441] = function(loc_0)
 				end
 				break
 			end
-			loc_2 = bit_and(rt_shr_u32(loc_2, 17), 32764)
+			loc_2 = bit32.band(rt_shr_u32(loc_2, 17), 32764)
 			reg_1 = FUNC_LIST[314](1310720, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_2)))
 			rt_store_i32(memory_at_0, loc_0 + 72, reg_1)
 			reg_1 = FUNC_LIST[314](1310720, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_2)))
@@ -33721,7 +33710,7 @@ FUNC_LIST[442] = function(loc_0, loc_1)
 			loc_4 = GLOBAL_LIST[39].value
 			loc_5 = rt_load_i32(memory_at_0, loc_0 + 12)
 			loc_2 = rt_add_i32(rt_div_i32(rt_mul_i32(rt_add_i32(loc_2, loc_3), 3), 2), 262144)
-			loc_3 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+			loc_3 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 			reg_0 = FUNC_LIST[314](loc_2, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), loc_3)))
 			loc_1 = reg_0
 			loc_4 = GLOBAL_LIST[38].value
@@ -33768,12 +33757,12 @@ FUNC_LIST[443] = function(loc_0)
 			if loc_1 == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967263))
 			reg_1 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 			loc_1 = reg_1
 			rt_store_i32(memory_at_0, loc_0 + 32, loc_1)
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 120) + 106), 4) == 0 then
 					break
 				end
 				reg_1 = FUNC_LIST[70]()
@@ -33790,9 +33779,9 @@ FUNC_LIST[443] = function(loc_0)
 end
 FUNC_LIST[444] = function(loc_0)
 	while true do
-		rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
+		rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
 		FUNC_LIST[442](loc_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 32), 1073741824))
-		FUNC_LIST[442](loc_0, bit_xor(rt_load_i32(memory_at_0, loc_0 + 32), 2147483648))
+		FUNC_LIST[442](loc_0, bit32.bxor(rt_load_i32(memory_at_0, loc_0 + 32), 2147483648))
 		FUNC_LIST[442](loc_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 32), 3221225472))
 		break
 	end
@@ -34099,11 +34088,11 @@ FUNC_LIST[449] = function(loc_0)
 						end
 						break
 					end
-					if bit_and((if loc_4 == 21 then 1 else 0), (if loc_3 == 6 then 1 else 0)) ~= 0 then
+					if bit32.band((if loc_4 == 21 then 1 else 0), (if loc_3 == 6 then 1 else 0)) ~= 0 then
 						desired = 2
 						break
 					end
-					if bit_and((if loc_4 == 19 then 1 else 0), (if loc_3 == 8 then 1 else 0)) ~= 0 then
+					if bit32.band((if loc_4 == 19 then 1 else 0), (if loc_3 == 8 then 1 else 0)) ~= 0 then
 						desired = 2
 						break
 					end
@@ -34493,14 +34482,14 @@ FUNC_LIST[458] = function(loc_0)
 		while true do
 			reg_1 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 16), 4273995776)
 			reg_2 = FUNC_LIST[70]()
-			reg_0 = FUNC_LIST[532](loc_1, reg_1, bit_or(rt_shl_i32(reg_2, 17), 128), 33)
+			reg_0 = FUNC_LIST[532](loc_1, reg_1, bit32.bor(rt_shl_i32(reg_2, 17), 128), 33)
 			loc_2 = reg_0
 			reg_1 = FUNC_LIST[70]()
 			rt_store_i32(memory_at_0, loc_2 + 80, rt_shl_i32(reg_1, 9))
 			reg_0 = FUNC_LIST[526](loc_2, 799)
 			reg_0 = FUNC_LIST[70]()
 			loc_3 = reg_0
-			loc_3 = rt_sub_i32(rt_load_i32(memory_at_0, loc_2 + 96), bit_and(loc_3, 7))
+			loc_3 = rt_sub_i32(rt_load_i32(memory_at_0, loc_2 + 96), bit32.band(loc_3, 7))
 			rt_store_i32(memory_at_0, loc_2 + 96, (if rt_gt_i32(loc_3, 1) then loc_3 else 1))
 			loc_2 = (if rt_lt_i32(loc_1, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 12), 20447232)) then 1 else 0)
 			loc_1 = rt_add_i32(loc_1, 524288)
@@ -34524,14 +34513,14 @@ FUNC_LIST[459] = function(loc_0)
 		reg_2 = FUNC_LIST[70]()
 		reg_1 = rt_load_i32(memory_at_0, loc_0 + 16)
 		reg_2 = FUNC_LIST[70]()
-		reg_0 = FUNC_LIST[532](rt_add_i32(reg_0, rt_shl_i32(rt_sub_i32(reg_1, reg_2), 11)), reg_1, bit_or(rt_shl_i32(reg_2, 17), 128), 33)
+		reg_0 = FUNC_LIST[532](rt_add_i32(reg_0, rt_shl_i32(rt_sub_i32(reg_1, reg_2), 11)), reg_1, bit32.bor(rt_shl_i32(reg_2, 17), 128), 33)
 		loc_0 = reg_0
 		reg_1 = FUNC_LIST[70]()
 		rt_store_i32(memory_at_0, loc_0 + 80, rt_shl_i32(reg_1, 9))
 		reg_0 = FUNC_LIST[526](loc_0, 799)
 		reg_0 = FUNC_LIST[70]()
 		loc_1 = reg_0
-		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_1, 7))
+		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_1, 7))
 		rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 		break
 	end
@@ -34551,7 +34540,7 @@ FUNC_LIST[461] = function(loc_0)
 		loc_1 = rt_add_i32(GLOBAL_LIST[1].value, 16139648)
 		reg_0 = loc_1
 		loc_1 = rt_load_i32(memory_at_0, loc_1)
-		rt_store_i32(memory_at_0, reg_0, bit_xor(loc_1, 1))
+		rt_store_i32(memory_at_0, reg_0, bit32.bxor(loc_1, 1))
 		while true do
 			while true do
 				if rt_gt_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[185].value), 1) then
@@ -34751,7 +34740,7 @@ FUNC_LIST[463] = function(loc_0)
 			reg_0 = FUNC_LIST[532](rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16), rt_load_i32(memory_at_0, loc_1 + 20), loc_2)
 			loc_2 = reg_0
 			loc_1 = rt_load_i32(memory_at_0, loc_2 + 136)
-			loc_3 = bit_and(rt_add_i32(loc_1, 4294967295), 3)
+			loc_3 = bit32.band(rt_add_i32(loc_1, 4294967295), 3)
 			loc_4 = 0
 			while true do
 				while true do
@@ -34788,7 +34777,7 @@ FUNC_LIST[463] = function(loc_0)
 							end
 							break
 						end
-						loc_1 = bit_and(rt_add_i32(loc_1, 1), 3)
+						loc_1 = bit32.band(rt_add_i32(loc_1, 1), 3)
 						rt_store_i32(memory_at_0, loc_2 + 136, loc_1)
 						continue
 					end
@@ -35156,7 +35145,7 @@ FUNC_LIST[466] = function(loc_0)
 		reg_0 = FUNC_LIST[465](loc_5, loc_4, loc_3, loc_2, 0, loc_1)
 		loc_1 = reg_0
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_6), 7) ~= 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_6), 7) ~= 0 then
 				break
 			end
 			FUNC_LIST[702](rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 20), 44), 22)
@@ -35756,7 +35745,7 @@ FUNC_LIST[468] = function(loc_0, loc_1)
 				if rt_lt_i32(loc_9, 1) then
 					continue
 				end
-				loc_10 = bit_and(rt_load_i32_u16(memory_at_0, loc_6 + 8), 65535)
+				loc_10 = bit32.band(rt_load_i32_u16(memory_at_0, loc_6 + 8), 65535)
 				while true do
 					loc_11 = rt_load_i32(memory_at_0, GLOBAL_LIST[45].value)
 					loc_12 = rt_load_i32(memory_at_0, loc_6 + 84)
@@ -35765,7 +35754,7 @@ FUNC_LIST[468] = function(loc_0, loc_1)
 						while true do
 							while true do
 								loc_6 = rt_load_i32(memory_at_0, rt_add_i32(loc_12, rt_shl_i32(loc_7, 2)))
-								if bit_and(rt_load_i32_u8(memory_at_0, loc_6 + 16), 4) == 0 then
+								if bit32.band(rt_load_i32_u8(memory_at_0, loc_6 + 16), 4) == 0 then
 									break
 								end
 								if loc_2 ~= rt_div_i32(rt_sub_i32(rt_load_i32(memory_at_0, loc_6 + 48), loc_11), 88) then
@@ -35917,7 +35906,7 @@ FUNC_LIST[469] = function(loc_0, loc_1, loc_2)
 				end
 				break
 			end
-			loc_2 = rt_add_i32(rt_shl_i32(loc_2, (if bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[185].value), 4294967291) == 0 then 1 else 0)), loc_7)
+			loc_2 = rt_add_i32(rt_shl_i32(loc_2, (if bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[185].value), 4294967291) == 0 then 1 else 0)), loc_7)
 			rt_store_i32(memory_at_0, loc_4, (if rt_lt_i32(loc_2, loc_8) then loc_2 else loc_8))
 			loc_4 = 1
 			if loc_7 ~= 0 then
@@ -36241,7 +36230,7 @@ FUNC_LIST[474] = function(loc_0, loc_1)
 						end
 						rt_store_i32(memory_at_0, loc_0 + 60, 2100)
 						loc_0 = rt_load_i32(memory_at_0, loc_0)
-						rt_store_i32(memory_at_0, loc_0 + 104, bit_or(rt_load_i32(memory_at_0, loc_0 + 104), 262144))
+						rt_store_i32(memory_at_0, loc_0 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_0 + 104), 262144))
 						reg_0 = 1
 						desired = 0
 						break
@@ -36279,7 +36268,7 @@ FUNC_LIST[474] = function(loc_0, loc_1)
 				if rt_gt_i32(loc_1, 99) then
 					break
 				end
-				loc_1 = rt_add_i32(bit_and(rt_shr_i32(loc_1, 31), loc_1), 100)
+				loc_1 = rt_add_i32(bit32.band(rt_shr_i32(loc_1, 31), loc_1), 100)
 				rt_store_i32(memory_at_0, loc_0 + 40, loc_1)
 				rt_store_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0) + 108, loc_1)
 				break
@@ -36893,7 +36882,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 																											if rt_gt_i32(loc_2, 99) then
 																												break
 																											end
-																											loc_2 = rt_add_i32(bit_and(rt_shr_i32(loc_2, 31), loc_2), 100)
+																											loc_2 = rt_add_i32(bit32.band(rt_shr_i32(loc_2, 31), loc_2), 100)
 																											rt_store_i32(memory_at_0, loc_1 + 40, loc_2)
 																											rt_store_i32(memory_at_0, rt_load_i32(memory_at_0, loc_1) + 108, loc_2)
 																											break
@@ -36923,7 +36912,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 																									end
 																									rt_store_i32(memory_at_0, loc_1 + 60, 2100)
 																									loc_2 = rt_load_i32(memory_at_0, loc_1)
-																									rt_store_i32(memory_at_0, loc_2 + 104, bit_or(rt_load_i32(memory_at_0, loc_2 + 104), 262144))
+																									rt_store_i32(memory_at_0, loc_2 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_2 + 104), 262144))
 																									rt_store_i32(memory_at_0, loc_1 + 224, rt_add_i32(GLOBAL_LIST[1].value, 61))
 																									loc_2 = 93
 																									desired = 2
@@ -36977,7 +36966,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 																					end
 																					while true do
 																						while true do
-																							if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 106), 2) == 0 then
+																							if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 106), 2) == 0 then
 																								break
 																							end
 																							reg_0 = FUNC_LIST[469](loc_1, 0, 0)
@@ -37169,7 +37158,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 												end
 												break
 											end
-											reg_0 = FUNC_LIST[470](loc_1, 3, bit_and(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 104), 17), 1))
+											reg_0 = FUNC_LIST[470](loc_1, 3, bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 104), 17), 1))
 											if reg_0 == 0 then
 												desired = 1
 												break
@@ -37233,7 +37222,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 								end
 								break
 							end
-							reg_0 = FUNC_LIST[470](loc_1, 2, bit_and(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 104), 17), 1))
+							reg_0 = FUNC_LIST[470](loc_1, 2, bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 104), 17), 1))
 							if reg_0 == 0 then
 								desired = 1
 								break
@@ -37249,7 +37238,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 							end
 							break
 						end
-						reg_0 = FUNC_LIST[470](loc_1, 8, bit_and(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 104), 17), 1))
+						reg_0 = FUNC_LIST[470](loc_1, 8, bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, loc_0 + 104), 17), 1))
 						if reg_0 == 0 then
 							desired = 1
 							break
@@ -37284,7 +37273,7 @@ FUNC_LIST[475] = function(loc_0, loc_1)
 				break
 			end
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 106), 128) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 106), 128) == 0 then
 					break
 				end
 				rt_store_i32(memory_at_0, loc_1 + 216, rt_add_i32(rt_load_i32(memory_at_0, loc_1 + 216), 1))
@@ -37318,7 +37307,7 @@ FUNC_LIST[476] = function(loc_0, loc_1)
 	while true do
 		rt_store_i32(memory_at_0, loc_1 + 68, rt_shr_i32(rt_load_i32(memory_at_0, loc_1 + 68), 2))
 		loc_2 = rt_load_i32(memory_at_0, loc_1 + 104)
-		rt_store_i32(memory_at_0, loc_1 + 104, bit_or(bit_and(loc_2, (if rt_load_i32(memory_at_0, loc_1 + 88) == 18 then 4277124091 else 4277123579)), 1049600))
+		rt_store_i32(memory_at_0, loc_1 + 104, bit32.bor(bit32.band(loc_2, (if rt_load_i32(memory_at_0, loc_1 + 88) == 18 then 4277124091 else 4277123579)), 1049600))
 		while true do
 			while true do
 				if loc_0 == 0 then
@@ -37329,7 +37318,7 @@ FUNC_LIST[476] = function(loc_0, loc_1)
 					break
 				end
 				while true do
-					if bit_and(loc_2, 4194304) == 0 then
+					if bit32.band(loc_2, 4194304) == 0 then
 						break
 					end
 					rt_store_i32(memory_at_0, loc_3 + 212, rt_add_i32(rt_load_i32(memory_at_0, loc_3 + 212), 1))
@@ -37360,7 +37349,7 @@ FUNC_LIST[476] = function(loc_0, loc_1)
 			if rt_load_i32(memory_at_0, GLOBAL_LIST[40].value) ~= 0 then
 				break
 			end
-			if bit_and(loc_2, 4194304) == 0 then
+			if bit32.band(loc_2, 4194304) == 0 then
 				break
 			end
 			loc_2 = GLOBAL_LIST[15].value
@@ -37386,7 +37375,7 @@ FUNC_LIST[476] = function(loc_0, loc_1)
 				end
 				break
 			end
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294967293))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294967293))
 			rt_store_i32(memory_at_0, loc_2 + 4, 1)
 			FUNC_LIST[548](loc_2)
 			loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[13].value)
@@ -37427,7 +37416,7 @@ FUNC_LIST[476] = function(loc_0, loc_1)
 		reg_0 = FUNC_LIST[526](loc_1, loc_2)
 		reg_0 = FUNC_LIST[70]()
 		loc_0 = reg_0
-		loc_0 = rt_sub_i32(rt_load_i32(memory_at_0, loc_1 + 96), bit_and(loc_0, 3))
+		loc_0 = rt_sub_i32(rt_load_i32(memory_at_0, loc_1 + 96), bit32.band(loc_0, 3))
 		rt_store_i32(memory_at_0, loc_1 + 96, (if rt_gt_i32(loc_0, 1) then loc_0 else 1))
 		while true do
 			if rt_load_i32(memory_at_0, GLOBAL_LIST[89].value) == 9 then
@@ -37485,7 +37474,7 @@ FUNC_LIST[476] = function(loc_0, loc_1)
 			end
 			reg_0 = FUNC_LIST[532](rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16), 2147483648, loc_0)
 			loc_1 = reg_0
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_or(rt_load_i32(memory_at_0, loc_1 + 104), 131072))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_1 + 104), 131072))
 			break
 		end
 		break
@@ -37502,14 +37491,14 @@ FUNC_LIST[477] = function(loc_0, loc_1, loc_2, loc_3)
 	while true do
 		while true do
 			loc_4 = rt_load_i32(memory_at_0, loc_0 + 104)
-			if bit_and(loc_4, 4) == 0 then
+			if bit32.band(loc_4, 4) == 0 then
 				break
 			end
 			if rt_lt_i32(rt_load_i32(memory_at_0, loc_0 + 108), 1) then
 				break
 			end
 			while true do
-				if bit_and(loc_4, 16777216) == 0 then
+				if bit32.band(loc_4, 16777216) == 0 then
 					break
 				end
 				rt_store_i32(memory_at_0, loc_0 + 80, 0)
@@ -37523,12 +37512,12 @@ FUNC_LIST[477] = function(loc_0, loc_1, loc_2, loc_3)
 				break
 			end
 			loc_5 = rt_load_i32(memory_at_0, loc_0 + 132)
-			loc_3 = rt_shr_i32(loc_3, bit_and((if loc_5 ~= 0 then 1 else 0), (if rt_load_i32(memory_at_0, GLOBAL_LIST[185].value) == 0 then 1 else 0)))
+			loc_3 = rt_shr_i32(loc_3, bit32.band((if loc_5 ~= 0 then 1 else 0), (if rt_load_i32(memory_at_0, GLOBAL_LIST[185].value) == 0 then 1 else 0)))
 			while true do
 				if loc_1 == 0 then
 					break
 				end
-				if bit_and(loc_4, 4096) ~= 0 then
+				if bit32.band(loc_4, 4096) ~= 0 then
 					break
 				end
 				while true do
@@ -37565,11 +37554,11 @@ FUNC_LIST[477] = function(loc_0, loc_1, loc_2, loc_3)
 						break
 					end
 					reg_0 = FUNC_LIST[70]()
-					if bit_and(reg_0, 1) == 0 then
+					if bit32.band(reg_0, 1) == 0 then
 						break
 					end
 					loc_4 = rt_shl_i32(loc_4, 2)
-					loc_6 = bit_xor(loc_6, 2147483648)
+					loc_6 = bit32.bxor(loc_6, 2147483648)
 					break
 				end
 				if desired then
@@ -37578,7 +37567,7 @@ FUNC_LIST[477] = function(loc_0, loc_1, loc_2, loc_3)
 					end
 					break
 				end
-				loc_1 = bit_and(rt_shr_u32(loc_6, 17), 32764)
+				loc_1 = bit32.band(rt_shr_u32(loc_6, 17), 32764)
 				reg_1 = FUNC_LIST[314](loc_4, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1)))
 				rt_store_i32(memory_at_0, loc_0 + 72, rt_add_i32(reg_1, rt_load_i32(memory_at_0, loc_0 + 72)))
 				reg_1 = FUNC_LIST[314](loc_4, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_1)))
@@ -37613,7 +37602,7 @@ FUNC_LIST[477] = function(loc_0, loc_1, loc_2, loc_3)
 					if rt_gt_i32(loc_3, 999) then
 						break
 					end
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_5 + 204), 2) ~= 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_5 + 204), 2) ~= 0 then
 						desired = 1
 						break
 					end
@@ -37740,10 +37729,10 @@ FUNC_LIST[477] = function(loc_0, loc_1, loc_2, loc_3)
 					break
 				end
 				loc_5 = rt_load_i32(memory_at_0, loc_0 + 104)
-				if bit_and(loc_5, 16777216) ~= 0 then
+				if bit32.band(loc_5, 16777216) ~= 0 then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_or(loc_5, 64))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.bor(loc_5, 64))
 				reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, loc_3 + 28))
 				break
 			end
@@ -37839,7 +37828,7 @@ FUNC_LIST[478] = function(loc_0)
 			loc_1 = reg_0
 			while true do
 				loc_2 = rt_load_i32(memory_at_0, loc_0 + 12)
-				loc_3 = bit_and(rt_shl_i32(loc_1, 4), 48)
+				loc_3 = bit32.band(rt_shl_i32(loc_1, 4), 48)
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 24)
 				if rt_lt_i32(rt_sub_i32(rt_load_i32_i16(memory_at_0, loc_2 + 12), loc_3), loc_1) then
 					break
@@ -37900,7 +37889,7 @@ FUNC_LIST[480] = function(loc_0)
 			end
 			rt_store_i32_n16(memory_at_0, loc_3 + 12, loc_2)
 			reg_1 = FUNC_LIST[70]()
-			rt_store_i32(memory_at_0, loc_0 + 16, rt_add_i32(bit_and(reg_1, rt_load_i32(memory_at_0, rt_add_i32(loc_0, loc_1))), 1))
+			rt_store_i32(memory_at_0, loc_0 + 16, rt_add_i32(bit32.band(reg_1, rt_load_i32(memory_at_0, rt_add_i32(loc_0, loc_1))), 1))
 			break
 		end
 		break
@@ -37925,7 +37914,7 @@ FUNC_LIST[481] = function(loc_0)
 		rt_store_i64(memory_at_0, loc_1 + 28, rt_i64_from_u32(64, 7))
 		rt_store_i32(memory_at_0, loc_1 + 24, loc_0)
 		reg_1 = FUNC_LIST[70]()
-		rt_store_i32(memory_at_0, loc_1 + 16, rt_add_i32(bit_and(reg_1, rt_load_i32(memory_at_0, loc_1 + 28)), 1))
+		rt_store_i32(memory_at_0, loc_1 + 16, rt_add_i32(bit32.band(reg_1, rt_load_i32(memory_at_0, loc_1 + 28)), 1))
 		break
 	end
 end
@@ -37983,7 +37972,7 @@ FUNC_LIST[483] = function(loc_0, loc_1, loc_2)
 				break
 			end
 			reg_0 = FUNC_LIST[70]()
-			loc_0 = rt_add_i32(bit_and(reg_0, 7), 1)
+			loc_0 = rt_add_i32(bit32.band(reg_0, 7), 1)
 			break
 		end
 		rt_store_i32(memory_at_0, loc_3 + 16, loc_0)
@@ -38024,7 +38013,7 @@ FUNC_LIST[484] = function(loc_0)
 					rt_store_i32(memory_at_0, loc_3 + 20, (if loc_4 == rt_load_i32(memory_at_0, loc_3 + 24) then 0 else loc_4))
 					rt_store_i32_n16(memory_at_0, loc_2 + 14, 0)
 					reg_1 = FUNC_LIST[70]()
-					rt_store_i32(memory_at_0, loc_3 + 16, rt_add_i32(bit_and(reg_1, 7), 1))
+					rt_store_i32(memory_at_0, loc_3 + 16, rt_add_i32(bit32.band(reg_1, 7), 1))
 					break
 				end
 				reg_0 = FUNC_LIST[601](loc_0, loc_1)
@@ -38269,14 +38258,14 @@ FUNC_LIST[489] = function(loc_0)
 	while true do
 		loc_1 = 1
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 104), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 104), 4) == 0 then
 				break
 			end
 			loc_2 = GLOBAL_LIST[378].value
 			loc_2 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_2))
 			reg_0 = loc_2
 			loc_2 = rt_shr_i32(loc_2, 31)
-			reg_0 = rt_sub_i32(bit_xor(reg_0, loc_2), loc_2)
+			reg_0 = rt_sub_i32(bit32.bxor(reg_0, loc_2), loc_2)
 			loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[379].value)
 			loc_3 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 64), rt_load_i32(memory_at_0, loc_2 + 64))
 			if rt_ge_i32(reg_0, loc_3) then
@@ -38289,7 +38278,7 @@ FUNC_LIST[489] = function(loc_0)
 			loc_4 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_4))
 			reg_0 = loc_4
 			loc_4 = rt_shr_i32(loc_4, 31)
-			if rt_sub_i32(bit_xor(reg_0, loc_4), loc_4) >= loc_3 then
+			if rt_sub_i32(bit32.bxor(reg_0, loc_4), loc_4) >= loc_3 then
 				break
 			end
 			loc_3 = GLOBAL_LIST[16].value
@@ -38480,15 +38469,15 @@ FUNC_LIST[491] = function(loc_0)
 			end
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[379].value)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 1) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 1) ~= 0 then
 					break
 				end
 				loc_3 = rt_load_i32_u16(memory_at_0, loc_0 + 16)
-				if bit_and(loc_3, 1) ~= 0 then
+				if bit32.band(loc_3, 1) ~= 0 then
 					desired = 1
 					break
 				end
-				if bit_and(loc_3, 2) == 0 then
+				if bit32.band(loc_3, 2) == 0 then
 					break
 				end
 				if rt_load_i32(memory_at_0, loc_1 + 132) == 0 then
@@ -38711,14 +38700,14 @@ FUNC_LIST[493] = function(loc_0)
 		loc_1 = 1
 		while true do
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 104)
-			if bit_and(loc_2, 7) == 0 then
+			if bit32.band(loc_2, 7) == 0 then
 				break
 			end
 			loc_3 = GLOBAL_LIST[378].value
 			loc_3 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_3))
 			reg_0 = loc_3
 			loc_3 = rt_shr_i32(loc_3, 31)
-			reg_0 = rt_sub_i32(bit_xor(reg_0, loc_3), loc_3)
+			reg_0 = rt_sub_i32(bit32.bxor(reg_0, loc_3), loc_3)
 			loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[379].value)
 			loc_4 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 64), rt_load_i32(memory_at_0, loc_3 + 64))
 			if rt_ge_i32(reg_0, loc_4) then
@@ -38731,12 +38720,12 @@ FUNC_LIST[493] = function(loc_0)
 			loc_5 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_5))
 			reg_0 = loc_5
 			loc_5 = rt_shr_i32(loc_5, 31)
-			if rt_sub_i32(bit_xor(reg_0, loc_5), loc_5) >= loc_4 then
+			if rt_sub_i32(bit32.bxor(reg_0, loc_5), loc_5) >= loc_4 then
 				break
 			end
 			while true do
 				loc_4 = rt_load_i32(memory_at_0, loc_3 + 104)
-				if bit_and(loc_4, 16777216) == 0 then
+				if bit32.band(loc_4, 16777216) == 0 then
 					break
 				end
 				reg_0 = FUNC_LIST[70]()
@@ -38747,7 +38736,7 @@ FUNC_LIST[493] = function(loc_0)
 				loc_0 = rt_load_i32(memory_at_0, loc_2)
 				rt_store_i32(memory_at_0, loc_0 + 80, 0)
 				rt_store_i64(memory_at_0, loc_0 + 72, rt_i64_ZERO)
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4278190079))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4278190079))
 				reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 4))
 				reg_0 = 0
 				desired = 0
@@ -38760,7 +38749,7 @@ FUNC_LIST[493] = function(loc_0)
 				break
 			end
 			while true do
-				if bit_and(loc_4, 65536) == 0 then
+				if bit32.band(loc_4, 65536) == 0 then
 					break
 				end
 				loc_4 = rt_load_i32(memory_at_0, loc_3 + 20)
@@ -38834,10 +38823,10 @@ FUNC_LIST[493] = function(loc_0)
 					break
 				end
 				while true do
-					if bit_and(loc_2, 4) ~= 0 then
+					if bit32.band(loc_2, 4) ~= 0 then
 						break
 					end
-					reg_0 = bit_and(rt_shr_u32(bit_xor(loc_2, 4294967295), 1), 1)
+					reg_0 = bit32.band(rt_shr_u32(bit32.bxor(loc_2, 4294967295), 1), 1)
 					desired = 0
 					break
 				end
@@ -38862,11 +38851,11 @@ FUNC_LIST[493] = function(loc_0)
 				break
 			end
 			while true do
-				if bit_and(loc_2, 1) == 0 then
+				if bit32.band(loc_2, 1) == 0 then
 					break
 				end
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[381].value + 1), 8) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[381].value + 1), 8) == 0 then
 						break
 					end
 					FUNC_LIST[475](loc_0, loc_3)
@@ -38878,7 +38867,7 @@ FUNC_LIST[493] = function(loc_0)
 					end
 					break
 				end
-				reg_0 = bit_and(rt_shr_u32(bit_xor(loc_2, 4294967295), 1), 1)
+				reg_0 = bit32.band(rt_shr_u32(bit32.bxor(loc_2, 4294967295), 1), 1)
 				desired = 0
 				break
 			end
@@ -38888,7 +38877,7 @@ FUNC_LIST[493] = function(loc_0)
 				end
 				break
 			end
-			loc_1 = bit_and(rt_shr_u32(bit_xor(loc_2, 4294967295), 1), 1)
+			loc_1 = bit32.band(rt_shr_u32(bit32.bxor(loc_2, 4294967295), 1), 1)
 			break
 		end
 		if desired then
@@ -38941,7 +38930,7 @@ FUNC_LIST[494] = function(loc_0, loc_1, loc_2)
 		rt_store_i32(memory_at_0, loc_1, rt_add_i32(rt_load_i32(memory_at_0, loc_1), 1))
 		rt_store_i32(memory_at_0, GLOBAL_LIST[355].value, 0)
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_4 + 1), 16) ~= 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_4 + 1), 16) ~= 0 then
 				break
 			end
 			loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[34].value)
@@ -39136,7 +39125,7 @@ FUNC_LIST[495] = function(loc_0, loc_1, loc_2)
 			end
 			while true do
 				loc_4 = rt_load_i32(memory_at_0, loc_0 + 104)
-				if bit_and(loc_4, 4096) ~= 0 then
+				if bit32.band(loc_4, 4096) ~= 0 then
 					break
 				end
 				loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[354].value)
@@ -39148,7 +39137,7 @@ FUNC_LIST[495] = function(loc_0, loc_1, loc_2)
 				end
 				rt_store_i32(memory_at_0, GLOBAL_LIST[353].value, 1)
 				while true do
-					if bit_and(loc_4, 32768) ~= 0 then
+					if bit32.band(loc_4, 32768) ~= 0 then
 						break
 					end
 					loc_8 = rt_load_i32(memory_at_0, loc_0 + 20)
@@ -39168,7 +39157,7 @@ FUNC_LIST[495] = function(loc_0, loc_1, loc_2)
 					end
 					break
 				end
-				if bit_and(loc_4, 17408) ~= 0 then
+				if bit32.band(loc_4, 17408) ~= 0 then
 					break
 				end
 				if rt_gt_i32(rt_sub_i32(loc_5, rt_load_i32(memory_at_0, GLOBAL_LIST[384].value)), 1572864) then
@@ -39192,7 +39181,7 @@ FUNC_LIST[495] = function(loc_0, loc_1, loc_2)
 			rt_store_i32(memory_at_0, loc_0 + 16, loc_2)
 			FUNC_LIST[518](loc_0)
 			loc_3 = 1
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 105), 144) ~= 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 105), 144) ~= 0 then
 				break
 			end
 			loc_2 = GLOBAL_LIST[355].value
@@ -39364,12 +39353,12 @@ FUNC_LIST[497] = function(loc_0)
 		loc_7 = rt_load_i32(memory_at_0, loc_4)
 		loc_3 = GLOBAL_LIST[39].value
 		reg_1 = FUNC_LIST[510](loc_7, loc_6)
-		loc_0 = (if loc_2 == 1 then bit_xor(loc_0, 2147483648) else loc_0)
+		loc_0 = (if loc_2 == 1 then bit32.bxor(loc_0, 2147483648) else loc_0)
 		loc_2 = rt_sub_i32(loc_5, loc_0)
 		loc_5 = rt_shr_u32(loc_2, 19)
-		reg_1 = FUNC_LIST[314](reg_1, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_shl_i32((if loc_2 > 2147483648 then bit_and(loc_5, 4095) else loc_5), 2))))
+		reg_1 = FUNC_LIST[314](reg_1, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_shl_i32((if loc_2 > 2147483648 then bit32.band(loc_5, 4095) else loc_5), 2))))
 		loc_2 = reg_1
-		loc_0 = bit_and(rt_shr_u32(loc_0, 17), 32764)
+		loc_0 = bit32.band(rt_shr_u32(loc_0, 17), 32764)
 		reg_1 = FUNC_LIST[314](loc_2, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), loc_0)))
 		rt_store_i32(memory_at_0, loc_4, reg_1)
 		reg_1 = FUNC_LIST[314](loc_2, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_0)))
@@ -39400,7 +39389,7 @@ FUNC_LIST[498] = function(loc_0)
 		while true do
 			while true do
 				loc_1 = rt_load_i32(memory_at_0, loc_0 + 8)
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 16), 4) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 16), 4) ~= 0 then
 					break
 				end
 				loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[396].value)
@@ -39638,7 +39627,7 @@ FUNC_LIST[500] = function(loc_0)
 					break
 				end
 				loc_2 = 0
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 16), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 16), 4) == 0 then
 					desired = 1
 					break
 				end
@@ -39738,7 +39727,7 @@ FUNC_LIST[500] = function(loc_0)
 			if loc_1 == rt_load_i32(memory_at_0, GLOBAL_LIST[406].value) then
 				break
 			end
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) == 0 then
 				break
 			end
 			loc_0 = rt_load_i32(memory_at_0, loc_0)
@@ -39813,7 +39802,7 @@ FUNC_LIST[501] = function(loc_0)
 					break
 				end
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 16), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 16), 4) == 0 then
 						break
 					end
 					FUNC_LIST[516](loc_1)
@@ -39927,7 +39916,7 @@ FUNC_LIST[501] = function(loc_0)
 					if loc_1 == 0 then
 						break
 					end
-					if bit_and(loc_8, 65535) == rt_load_i32_u16(memory_at_0, loc_1 + 10) then
+					if bit32.band(loc_8, 65535) == rt_load_i32_u16(memory_at_0, loc_1 + 10) then
 						desired = 1
 						break
 					end
@@ -39954,7 +39943,7 @@ FUNC_LIST[501] = function(loc_0)
 			if loc_1 == rt_load_i32(memory_at_0, GLOBAL_LIST[406].value) then
 				break
 			end
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 104), 4) == 0 then
 				break
 			end
 			loc_4 = rt_load_i32(memory_at_0, loc_0)
@@ -39994,7 +39983,7 @@ FUNC_LIST[501] = function(loc_0)
 			loc_4 = rt_add_i32(reg_0, reg_1)
 			while true do
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 8) + 106), 8) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 8) + 106), 8) == 0 then
 						break
 					end
 					FUNC_LIST[537](loc_5, loc_2, loc_4)
@@ -40049,7 +40038,7 @@ FUNC_LIST[502] = function(loc_0, loc_1, loc_2)
 		reg_1 = FUNC_LIST[540](loc_0)
 		loc_0 = reg_1
 		rt_store_i32(memory_at_0, reg_0, loc_0)
-		loc_3 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_3 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		loc_4 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_3))
 		loc_1 = rt_load_i32(memory_at_0, loc_0 + 12)
 		loc_5 = rt_load_i32(memory_at_0, loc_0 + 16)
@@ -40077,7 +40066,7 @@ FUNC_LIST[503] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 	while true do
 		rt_store_i32(memory_at_0, GLOBAL_LIST[410].value, loc_4)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[406].value, loc_0)
-		loc_5 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_5 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		loc_6 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_5))
 		loc_4 = rt_load_i32(memory_at_0, loc_0 + 12)
 		loc_1 = rt_load_i32(memory_at_0, loc_0 + 16)
@@ -40152,7 +40141,7 @@ FUNC_LIST[505] = function(loc_0)
 		loc_0 = rt_load_i32(memory_at_0, loc_0)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[413].value, loc_0)
 		loc_1 = rt_load_i32(memory_at_0, loc_0 + 32)
-		loc_2 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_2 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		loc_3 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_2))
 		loc_1 = rt_load_i32(memory_at_0, loc_0 + 16)
 		loc_4 = GLOBAL_LIST[39].value
@@ -40171,7 +40160,7 @@ FUNC_LIST[506] = function(loc_0)
 	local br_map = {}
 	while true do
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 104), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 104), 4) == 0 then
 				break
 			end
 			while true do
@@ -40200,11 +40189,11 @@ FUNC_LIST[506] = function(loc_0)
 			loc_3 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_2 + 12))
 			reg_0 = loc_3
 			loc_3 = rt_shr_i32(loc_3, 31)
-			loc_3 = rt_sub_i32(bit_xor(reg_0, loc_3), loc_3)
+			loc_3 = rt_sub_i32(bit32.bxor(reg_0, loc_3), loc_3)
 			loc_1 = rt_sub_i32(loc_1, rt_load_i32(memory_at_0, loc_2 + 16))
 			reg_1 = loc_1
 			loc_1 = rt_shr_i32(loc_1, 31)
-			loc_1 = rt_sub_i32(bit_xor(reg_1, loc_1), loc_1)
+			loc_1 = rt_sub_i32(bit32.bxor(reg_1, loc_1), loc_1)
 			loc_1 = rt_shr_i32(rt_sub_i32((if loc_3 > loc_1 then loc_3 else loc_1), rt_load_i32(memory_at_0, loc_0 + 64)), 16)
 			loc_1 = (if rt_gt_i32(loc_1, 0) then loc_1 else 0)
 			if rt_ge_i32(loc_1, rt_load_i32(memory_at_0, GLOBAL_LIST[416].value)) then
@@ -40330,7 +40319,7 @@ FUNC_LIST[508] = function(loc_0)
 				end
 				reg_0 = FUNC_LIST[526](loc_0, 895)
 				rt_store_i64(memory_at_0, loc_0 + 64, rt_i64_ZERO)
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294967293))
 				reg_0 = 1
 				desired = 0
 				break
@@ -40343,7 +40332,7 @@ FUNC_LIST[508] = function(loc_0)
 			end
 			while true do
 				loc_4 = rt_load_i32(memory_at_0, loc_0 + 104)
-				if bit_and(loc_4, 131072) == 0 then
+				if bit32.band(loc_4, 131072) == 0 then
 					break
 				end
 				FUNC_LIST[527](loc_0)
@@ -40357,14 +40346,14 @@ FUNC_LIST[508] = function(loc_0)
 				end
 				break
 			end
-			if bit_and(loc_4, 4) == 0 then
+			if bit32.band(loc_4, 4) == 0 then
 				break
 			end
 			rt_store_i32(memory_at_0, GLOBAL_LIST[391].value, 1)
 			if rt_load_i32(memory_at_0, GLOBAL_LIST[390].value) == 0 then
 				break
 			end
-			if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 3) ~= 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 3) ~= 0 then
 				break
 			end
 			FUNC_LIST[477](loc_0, 0, 0, 10)
@@ -40447,9 +40436,9 @@ FUNC_LIST[510] = function(loc_0, loc_1)
 	local reg_0
 	while true do
 		loc_2 = rt_shr_i32(loc_1, 31)
-		loc_1 = rt_sub_i32(bit_xor(loc_1, loc_2), loc_2)
+		loc_1 = rt_sub_i32(bit32.bxor(loc_1, loc_2), loc_2)
 		loc_2 = rt_shr_i32(loc_0, 31)
-		loc_0 = rt_sub_i32(bit_xor(loc_0, loc_2), loc_2)
+		loc_0 = rt_sub_i32(bit32.bxor(loc_0, loc_2), loc_2)
 		reg_0 = rt_sub_i32(rt_add_i32(loc_1, loc_0), rt_shr_u32((if loc_0 < loc_1 then loc_0 else loc_1), 1))
 		break
 	end
@@ -40588,8 +40577,8 @@ FUNC_LIST[512] = function(loc_0, loc_1)
 								desired = 1
 								break
 							end
-							loc_3 = bit_xor(loc_3, 1)
-							loc_2 = bit_xor(loc_2, 1)
+							loc_3 = bit32.bxor(loc_3, 1)
+							loc_2 = bit32.bxor(loc_2, 1)
 							desired = 1
 							break
 						end
@@ -40606,8 +40595,8 @@ FUNC_LIST[512] = function(loc_0, loc_1)
 							desired = 1
 							break
 						end
-						loc_3 = bit_xor(loc_3, 1)
-						loc_2 = bit_xor(loc_2, 1)
+						loc_3 = bit32.bxor(loc_3, 1)
+						loc_2 = bit32.bxor(loc_2, 1)
 						desired = 1
 						break
 					end
@@ -40936,10 +40925,10 @@ FUNC_LIST[513] = function(loc_0, loc_1, loc_2)
 		while true do
 			loc_0 = rt_sub_i32(loc_0, rt_load_i32(memory_at_0, loc_2))
 			loc_1 = rt_sub_i32(loc_1, rt_load_i32(memory_at_0, loc_2 + 4))
-			if rt_gt_i32(bit_xor(bit_xor(bit_xor(loc_4, loc_3), loc_0), loc_1), 4294967295) then
+			if rt_gt_i32(bit32.bxor(bit32.bxor(bit32.bxor(loc_4, loc_3), loc_0), loc_1), 4294967295) then
 				break
 			end
-			reg_0 = rt_shr_u32(bit_xor(loc_0, loc_4), 31)
+			reg_0 = rt_shr_u32(bit32.bxor(loc_0, loc_4), 31)
 			desired = 0
 			break
 		end
@@ -41048,7 +41037,7 @@ FUNC_LIST[517] = function(loc_0)
 	while true do
 		while true do
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 104)
-			if bit_and(loc_1, 8) ~= 0 then
+			if bit32.band(loc_1, 8) ~= 0 then
 				break
 			end
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 28)
@@ -41090,7 +41079,7 @@ FUNC_LIST[517] = function(loc_0)
 			break
 		end
 		while true do
-			if bit_and(loc_1, 16) ~= 0 then
+			if bit32.band(loc_1, 16) ~= 0 then
 				break
 			end
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 48)
@@ -41168,7 +41157,7 @@ FUNC_LIST[518] = function(loc_0)
 		rt_store_i32(memory_at_0, loc_0 + 52, loc_1)
 		while true do
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 104)
-			if bit_and(loc_2, 8) ~= 0 then
+			if bit32.band(loc_2, 8) ~= 0 then
 				break
 			end
 			loc_1 = rt_load_i32(memory_at_0, loc_1)
@@ -41198,7 +41187,7 @@ FUNC_LIST[518] = function(loc_0)
 			break
 		end
 		while true do
-			if bit_and(loc_2, 16) ~= 0 then
+			if bit32.band(loc_2, 16) ~= 0 then
 				break
 			end
 			loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[35].value)
@@ -41271,7 +41260,7 @@ FUNC_LIST[519] = function(loc_0, loc_1, loc_2)
 		loc_3 = 1
 		while true do
 			while true do
-				if rt_lt_i32(bit_or(loc_1, loc_0), 0) then
+				if rt_lt_i32(bit32.bor(loc_1, loc_0), 0) then
 					break
 				end
 				loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[420].value)
@@ -41362,7 +41351,7 @@ FUNC_LIST[520] = function(loc_0, loc_1, loc_2)
 	while true do
 		loc_3 = 1
 		while true do
-			if rt_lt_i32(bit_or(loc_1, loc_0), 0) then
+			if rt_lt_i32(bit32.bor(loc_1, loc_0), 0) then
 				break
 			end
 			loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[420].value)
@@ -41500,11 +41489,11 @@ FUNC_LIST[521] = function(loc_0)
 								loc_5 = GLOBAL_LIST[409].value
 								loc_4 = rt_sub_i32(loc_4, rt_load_i32(memory_at_0, loc_5))
 								loc_3 = rt_sub_i32(loc_3, rt_load_i32(memory_at_0, loc_5 + 4))
-								if rt_gt_i32(bit_xor(bit_xor(bit_xor(loc_2, loc_1), loc_4), loc_3), 4294967295) then
+								if rt_gt_i32(bit32.bxor(bit32.bxor(bit32.bxor(loc_2, loc_1), loc_4), loc_3), 4294967295) then
 									desired = 5
 									break
 								end
-								loc_4 = rt_shr_u32(bit_xor(loc_4, loc_2), 31)
+								loc_4 = rt_shr_u32(bit32.bxor(loc_4, loc_2), 31)
 								break
 							end
 							if desired then
@@ -41732,14 +41721,14 @@ FUNC_LIST[521] = function(loc_0)
 				break
 			end
 			while true do
-				reg_0 = bit_xor(loc_3, loc_1)
+				reg_0 = bit32.bxor(loc_3, loc_1)
 				loc_1 = GLOBAL_LIST[409].value
 				loc_2 = rt_sub_i32(loc_2, rt_load_i32(memory_at_0, loc_1))
 				loc_1 = rt_sub_i32(loc_6, rt_load_i32(memory_at_0, loc_1 + 4))
-				if rt_gt_i32(bit_xor(bit_xor(reg_0, loc_2), loc_1), 4294967295) then
+				if rt_gt_i32(bit32.bxor(bit32.bxor(reg_0, loc_2), loc_1), 4294967295) then
 					break
 				end
-				loc_1 = rt_shr_u32(bit_xor(loc_2, loc_3), 31)
+				loc_1 = rt_shr_u32(bit32.bxor(loc_2, loc_3), 31)
 				desired = 1
 				break
 			end
@@ -42225,7 +42214,7 @@ FUNC_LIST[522] = function(loc_0, loc_1)
 					end
 					break
 				end
-				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[204].value, bit_and(rt_add_i32(loc_0, 80), 254)), loc_1)
+				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[204].value, bit32.band(rt_add_i32(loc_0, 80), 254)), loc_1)
 				desired = 1
 				break
 			end
@@ -42235,7 +42224,7 @@ FUNC_LIST[522] = function(loc_0, loc_1)
 				end
 				break
 			end
-			if bit_and(rt_shl_i32(1, loc_2), 5421959) ~= 0 then
+			if bit32.band(rt_shl_i32(1, loc_2), 5421959) ~= 0 then
 				break
 			end
 			rt_store_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3 + 4), rt_shl_i32(rt_extend_i32_n16(rt_div_i32(rt_extend_i32_n16(rt_add_i32(loc_4, loc_0)), 4)), 2)), loc_1)
@@ -42273,7 +42262,7 @@ FUNC_LIST[523] = function(loc_0)
 		loc_4 = rt_sub_i32(0, loc_1)
 		loc_5 = rt_load_i32(memory_at_0, loc_2 + 12)
 		loc_2 = rt_load_i32(memory_at_0, loc_2 + 8)
-		loc_6 = bit_xor(loc_5, loc_2)
+		loc_6 = bit32.bxor(loc_5, loc_2)
 		loc_7 = (if rt_gt_i32(loc_6, 0) then 1 else 0)
 		loc_8 = (if loc_7 ~= 0 then loc_1 else loc_4)
 		loc_9 = rt_add_i32(loc_3, loc_8)
@@ -42335,10 +42324,10 @@ FUNC_LIST[523] = function(loc_0)
 							loc_10 = GLOBAL_LIST[409].value
 							loc_11 = rt_sub_i32(loc_1, rt_load_i32(memory_at_0, loc_10))
 							loc_10 = rt_sub_i32(loc_9, rt_load_i32(memory_at_0, loc_10 + 4))
-							if rt_gt_i32(bit_xor(bit_xor(loc_11, loc_6), loc_10), 4294967295) then
+							if rt_gt_i32(bit32.bxor(bit32.bxor(loc_11, loc_6), loc_10), 4294967295) then
 								break
 							end
-							loc_5 = rt_shr_u32(bit_xor(loc_11, loc_5), 31)
+							loc_5 = rt_shr_u32(bit32.bxor(loc_11, loc_5), 31)
 							desired = 2
 							break
 						end
@@ -42432,14 +42421,14 @@ FUNC_LIST[523] = function(loc_0)
 				break
 			end
 			while true do
-				reg_0 = bit_xor(loc_10, loc_2)
+				reg_0 = bit32.bxor(loc_10, loc_2)
 				loc_2 = GLOBAL_LIST[409].value
 				loc_6 = rt_sub_i32(loc_4, rt_load_i32(memory_at_0, loc_2))
 				loc_2 = rt_sub_i32(loc_3, rt_load_i32(memory_at_0, loc_2 + 4))
-				if rt_gt_i32(bit_xor(bit_xor(reg_0, loc_6), loc_2), 4294967295) then
+				if rt_gt_i32(bit32.bxor(bit32.bxor(reg_0, loc_6), loc_2), 4294967295) then
 					break
 				end
-				loc_2 = rt_shr_u32(bit_xor(loc_6, loc_10), 31)
+				loc_2 = rt_shr_u32(bit32.bxor(loc_6, loc_10), 31)
 				desired = 1
 				break
 			end
@@ -42634,17 +42623,17 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 	while true do
 		loc_6 = GLOBAL_LIST[427].value
 		rt_store_i32(memory_at_0, GLOBAL_LIST[426].value, loc_6)
-		rt_store_i32(memory_at_0, GLOBAL_LIST[425].value, bit_and(loc_4, 4))
+		rt_store_i32(memory_at_0, GLOBAL_LIST[425].value, bit32.band(loc_4, 4))
 		loc_7 = 1
 		loc_6 = GLOBAL_LIST[348].value
 		rt_store_i32(memory_at_0, loc_6, rt_add_i32(rt_load_i32(memory_at_0, loc_6), 1))
 		loc_8 = 65536
 		loc_6 = rt_load_i32(memory_at_0, GLOBAL_LIST[35].value)
 		loc_9 = GLOBAL_LIST[409].value
-		loc_1 = (if bit_and(rt_sub_i32(loc_1, loc_6), 8388607) ~= 0 then loc_1 else rt_add_i32(loc_1, 65536))
+		loc_1 = (if bit32.band(rt_sub_i32(loc_1, loc_6), 8388607) ~= 0 then loc_1 else rt_add_i32(loc_1, 65536))
 		rt_store_i32(memory_at_0, loc_9 + 4, loc_1)
 		loc_10 = rt_load_i32(memory_at_0, GLOBAL_LIST[34].value)
-		loc_11 = (if bit_and(rt_sub_i32(loc_0, loc_10), 8388607) ~= 0 then loc_0 else rt_add_i32(loc_0, 65536))
+		loc_11 = (if bit32.band(rt_sub_i32(loc_0, loc_10), 8388607) ~= 0 then loc_0 else rt_add_i32(loc_0, 65536))
 		rt_store_i32(memory_at_0, loc_9, loc_11)
 		rt_store_i32(memory_at_0, loc_9 + 12, rt_sub_i32(loc_3, loc_1))
 		rt_store_i32(memory_at_0, loc_9 + 8, rt_sub_i32(loc_2, loc_11))
@@ -42662,7 +42651,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 					if rt_le_i32(loc_14, loc_6) then
 						break
 					end
-					loc_8 = rt_sub_i32(65536, bit_and(rt_shr_u32(loc_1, 7), 65535))
+					loc_8 = rt_sub_i32(65536, bit32.band(rt_shr_u32(loc_1, 7), 65535))
 					desired = 2
 					break
 				end
@@ -42687,7 +42676,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 					end
 					break
 				end
-				loc_8 = bit_and(rt_shr_u32(loc_1, 7), 65535)
+				loc_8 = bit32.band(rt_shr_u32(loc_1, 7), 65535)
 				loc_7 = 4294967295
 				break
 			end
@@ -42700,7 +42689,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 			loc_3 = rt_sub_i32(loc_2, loc_1)
 			reg_1 = loc_3
 			loc_3 = rt_shr_i32(loc_3, 31)
-			reg_0 = FUNC_LIST[315](rt_sub_i32(loc_12, loc_0), rt_sub_i32(bit_xor(reg_1, loc_3), loc_3))
+			reg_0 = FUNC_LIST[315](rt_sub_i32(loc_12, loc_0), rt_sub_i32(bit32.bxor(reg_1, loc_3), loc_3))
 			loc_15 = reg_0
 			break
 		end
@@ -42719,7 +42708,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 					if rt_le_i32(loc_13, loc_9) then
 						break
 					end
-					loc_11 = rt_sub_i32(65536, bit_and(loc_3, 65535))
+					loc_11 = rt_sub_i32(65536, bit32.band(loc_3, 65535))
 					loc_16 = 1
 					desired = 2
 					break
@@ -42746,7 +42735,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 					end
 					break
 				end
-				loc_11 = bit_and(loc_3, 65535)
+				loc_11 = bit32.band(loc_3, 65535)
 				loc_16 = 4294967295
 				break
 			end
@@ -42759,7 +42748,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 			loc_0 = rt_sub_i32(loc_12, loc_0)
 			reg_1 = loc_0
 			loc_0 = rt_shr_i32(loc_0, 31)
-			reg_0 = FUNC_LIST[315](rt_sub_i32(loc_2, loc_1), rt_sub_i32(bit_xor(reg_1, loc_0), loc_0))
+			reg_0 = FUNC_LIST[315](rt_sub_i32(loc_2, loc_1), rt_sub_i32(bit32.bxor(reg_1, loc_0), loc_0))
 			loc_12 = reg_0
 			break
 		end
@@ -42772,16 +42761,16 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 		loc_2 = rt_add_i32(loc_10, loc_3)
 		reg_0 = FUNC_LIST[314](loc_11, loc_12)
 		loc_11 = rt_add_i32(reg_0, rt_shr_i32(loc_1, 7))
-		loc_8 = bit_and(loc_4, 2)
+		loc_8 = bit32.band(loc_4, 2)
 		while true do
 			while true do
-				if bit_and(loc_4, 1) == 0 then
+				if bit32.band(loc_4, 1) == 0 then
 					break
 				end
 				loc_10 = 0
 				while true do
 					while true do
-						if rt_lt_i32(bit_or(loc_9, loc_6), 0) then
+						if rt_lt_i32(bit32.bor(loc_9, loc_6), 0) then
 							break
 						end
 						loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[420].value)
@@ -43001,7 +42990,7 @@ FUNC_LIST[525] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5)
 			loc_4 = 0
 			while true do
 				while true do
-					if rt_lt_i32(bit_or(loc_9, loc_6), 0) then
+					if rt_lt_i32(bit32.bor(loc_9, loc_6), 0) then
 						break
 					end
 					loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[420].value)
@@ -43215,7 +43204,7 @@ FUNC_LIST[526] = function(loc_0, loc_1)
 				end
 				rt_store_i32(memory_at_0, loc_0 + 100, 0)
 				while true do
-					if bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 131073) ~= 1 then
+					if bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 131073) ~= 1 then
 						break
 					end
 					while true do
@@ -43243,13 +43232,13 @@ FUNC_LIST[526] = function(loc_0, loc_1)
 					loc_3 = rt_add_i32(GLOBAL_LIST[430].value, rt_mul_i32(loc_1, 10))
 					rt_store_i32_n16(memory_at_0, loc_3 + 8, rt_load_i32_u16(memory_at_0, loc_0 + 148))
 					rt_store_i64(memory_at_0, loc_3, rt_load_i64(memory_at_0, loc_0 + 140))
-					loc_3 = bit_and(rt_add_i32(loc_1, 1), 127)
+					loc_3 = bit32.band(rt_add_i32(loc_1, 1), 127)
 					rt_store_i32(memory_at_0, loc_2, loc_3)
 					rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[431].value, rt_shl_i32(loc_1, 2)), rt_load_i32(memory_at_0, GLOBAL_LIST[209].value))
 					if loc_3 ~= rt_load_i32(memory_at_0, GLOBAL_LIST[432].value) then
 						break
 					end
-					rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit_and(rt_add_i32(loc_1, 2), 127))
+					rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit32.band(rt_add_i32(loc_1, 2), 127))
 					break
 				end
 				if desired then
@@ -43319,7 +43308,7 @@ FUNC_LIST[527] = function(loc_0)
 	local br_map = {}
 	while true do
 		while true do
-			if bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 131073) ~= 1 then
+			if bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 131073) ~= 1 then
 				break
 			end
 			while true do
@@ -43347,13 +43336,13 @@ FUNC_LIST[527] = function(loc_0)
 			loc_3 = rt_add_i32(GLOBAL_LIST[430].value, rt_mul_i32(loc_2, 10))
 			rt_store_i32_n16(memory_at_0, loc_3 + 8, rt_load_i32_u16(memory_at_0, loc_0 + 148))
 			rt_store_i64(memory_at_0, loc_3, rt_load_i64(memory_at_0, loc_0 + 140))
-			loc_3 = bit_and(rt_add_i32(loc_2, 1), 127)
+			loc_3 = bit32.band(rt_add_i32(loc_2, 1), 127)
 			rt_store_i32(memory_at_0, loc_1, loc_3)
 			rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[431].value, rt_shl_i32(loc_2, 2)), rt_load_i32(memory_at_0, GLOBAL_LIST[209].value))
 			if loc_3 ~= rt_load_i32(memory_at_0, GLOBAL_LIST[432].value) then
 				break
 			end
-			rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit_and(rt_add_i32(loc_2, 2), 127))
+			rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit32.band(rt_add_i32(loc_2, 2), 127))
 			break
 		end
 		FUNC_LIST[517](loc_0)
@@ -43372,8 +43361,8 @@ FUNC_LIST[528] = function(loc_0)
 		reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_1, 92)) + 48))
 		reg_0 = FUNC_LIST[70]()
 		loc_1 = reg_0
-		rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
-		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_1, 3))
+		rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
+		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_1, 3))
 		rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 		while true do
 			loc_1 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 56)
@@ -43423,13 +43412,13 @@ FUNC_LIST[529] = function(loc_0)
 						break
 					end
 					loc_1 = rt_load_i32(memory_at_0, loc_0 + 104)
-					if bit_and(loc_1, 16777216) == 0 then
+					if bit32.band(loc_1, 16777216) == 0 then
 						desired = 1
 						break
 					end
 					rt_store_i32(memory_at_0, loc_0 + 80, 0)
 					rt_store_i64(memory_at_0, loc_0 + 72, rt_i64_ZERO)
-					rt_store_i32(memory_at_0, loc_0 + 104, bit_and(loc_1, 4278190079))
+					rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(loc_1, 4278190079))
 					reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 4))
 					desired = 0
 					break
@@ -43576,7 +43565,7 @@ FUNC_LIST[529] = function(loc_0)
 					end
 					while true do
 						loc_4 = rt_load_i32(memory_at_0, loc_0 + 104)
-						if bit_and(loc_4, 65536) == 0 then
+						if bit32.band(loc_4, 65536) == 0 then
 							break
 						end
 						while true do
@@ -43592,7 +43581,7 @@ FUNC_LIST[529] = function(loc_0)
 								break
 							end
 							while true do
-								if bit_and(loc_4, 131073) ~= 1 then
+								if bit32.band(loc_4, 131073) ~= 1 then
 									break
 								end
 								while true do
@@ -43620,13 +43609,13 @@ FUNC_LIST[529] = function(loc_0)
 								loc_4 = rt_add_i32(GLOBAL_LIST[430].value, rt_mul_i32(loc_1, 10))
 								rt_store_i32_n16(memory_at_0, loc_4 + 8, rt_load_i32_u16(memory_at_0, loc_0 + 148))
 								rt_store_i64(memory_at_0, loc_4, rt_load_i64(memory_at_0, loc_0 + 140))
-								loc_4 = bit_and(rt_add_i32(loc_1, 1), 127)
+								loc_4 = bit32.band(rt_add_i32(loc_1, 1), 127)
 								rt_store_i32(memory_at_0, loc_5, loc_4)
 								rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[431].value, rt_shl_i32(loc_1, 2)), rt_load_i32(memory_at_0, GLOBAL_LIST[209].value))
 								if loc_4 ~= rt_load_i32(memory_at_0, GLOBAL_LIST[432].value) then
 									break
 								end
-								rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit_and(rt_add_i32(loc_1, 2), 127))
+								rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit32.band(rt_add_i32(loc_1, 2), 127))
 								break
 							end
 							if desired then
@@ -43653,8 +43642,8 @@ FUNC_LIST[529] = function(loc_0)
 						reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92)) + 48))
 						reg_0 = FUNC_LIST[70]()
 						loc_4 = reg_0
-						rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
-						loc_4 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_4, 3))
+						rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
+						loc_4 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_4, 3))
 						rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_4, 1) then loc_4 else 1))
 						loc_4 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 56)
 						if loc_4 == 0 then
@@ -43681,7 +43670,7 @@ FUNC_LIST[529] = function(loc_0)
 					end
 					break
 				end
-				if bit_or(loc_1, loc_5) ~= 0 then
+				if bit32.bor(loc_1, loc_5) ~= 0 then
 					continue
 				end
 				break
@@ -43696,7 +43685,7 @@ FUNC_LIST[529] = function(loc_0)
 				if loc_3 == 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_3 + 204), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_3 + 204), 4) == 0 then
 					break
 				end
 				rt_store_i64(memory_at_0, loc_0 + 72, rt_i64_ZERO)
@@ -43710,7 +43699,7 @@ FUNC_LIST[529] = function(loc_0)
 				break
 			end
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 104)
-			if bit_and(loc_1, 16842752) ~= 0 then
+			if bit32.band(loc_1, 16842752) ~= 0 then
 				break
 			end
 			loc_4 = rt_load_i32(memory_at_0, loc_0 + 56)
@@ -43719,7 +43708,7 @@ FUNC_LIST[529] = function(loc_0)
 			end
 			loc_5 = rt_load_i32(memory_at_0, loc_0 + 72)
 			while true do
-				if bit_and(loc_1, 1048576) == 0 then
+				if bit32.band(loc_1, 1048576) == 0 then
 					break
 				end
 				while true do
@@ -43845,10 +43834,10 @@ FUNC_LIST[530] = function(loc_0)
 		rt_store_i32(memory_at_0, loc_0 + 20, loc_1)
 		while true do
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 104)
-			if bit_and(loc_2, 16384) == 0 then
+			if bit32.band(loc_2, 16384) == 0 then
 				break
 			end
-			if bit_and(loc_2, 18874368) ~= 0 then
+			if bit32.band(loc_2, 18874368) ~= 0 then
 				break
 			end
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 120)
@@ -43923,7 +43912,7 @@ FUNC_LIST[530] = function(loc_0)
 								break
 							end
 							loc_1 = rt_load_i32(memory_at_0, loc_0 + 80)
-							if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 107), 1) == 0 then
+							if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 107), 1) == 0 then
 								break
 							end
 							loc_1 = rt_sub_i32(0, loc_1)
@@ -43975,7 +43964,7 @@ FUNC_LIST[530] = function(loc_0)
 							if loc_4 > 5 then
 								break
 							end
-							if bit_and(loc_3, 16777216) == 0 then
+							if bit32.band(loc_3, 16777216) == 0 then
 								break
 							end
 							rt_store_i32(memory_at_0, loc_0 + 80, rt_sub_i32(0, loc_1))
@@ -43987,7 +43976,7 @@ FUNC_LIST[530] = function(loc_0)
 							end
 							break
 						end
-						if bit_and(loc_3, 69632) ~= 65536 then
+						if bit32.band(loc_3, 69632) ~= 65536 then
 							desired = 3
 							break
 						end
@@ -43997,8 +43986,8 @@ FUNC_LIST[530] = function(loc_0)
 						reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_1, 92)) + 48))
 						reg_0 = FUNC_LIST[70]()
 						loc_1 = reg_0
-						rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
-						loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_1, 3))
+						rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
+						loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_1, 3))
 						rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 						loc_1 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 56)
 						if loc_1 ~= 0 then
@@ -44016,7 +44005,7 @@ FUNC_LIST[530] = function(loc_0)
 					end
 					while true do
 						loc_3 = rt_load_i32(memory_at_0, loc_0 + 104)
-						if bit_and(loc_3, 512) ~= 0 then
+						if bit32.band(loc_3, 512) ~= 0 then
 							break
 						end
 						loc_2 = rt_load_i32(memory_at_0, loc_0 + 80)
@@ -44062,7 +44051,7 @@ FUNC_LIST[530] = function(loc_0)
 				end
 				rt_store_i32(memory_at_0, loc_0 + 20, rt_sub_i32(loc_2, loc_1))
 				while true do
-					if bit_and(loc_3, 16777216) == 0 then
+					if bit32.band(loc_3, 16777216) == 0 then
 						break
 					end
 					rt_store_i32(memory_at_0, loc_0 + 80, rt_sub_i32(0, loc_4))
@@ -44074,7 +44063,7 @@ FUNC_LIST[530] = function(loc_0)
 					end
 					break
 				end
-				if bit_and(loc_3, 69632) ~= 65536 then
+				if bit32.band(loc_3, 69632) ~= 65536 then
 					desired = 1
 					break
 				end
@@ -44084,8 +44073,8 @@ FUNC_LIST[530] = function(loc_0)
 				reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_1, 92)) + 48))
 				reg_0 = FUNC_LIST[70]()
 				loc_1 = reg_0
-				rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
-				loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_1, 3))
+				rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
+				loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_1, 3))
 				rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 				loc_1 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 56)
 				if loc_1 == 0 then
@@ -44129,17 +44118,17 @@ FUNC_LIST[531] = function(loc_0)
 			reg_2 = FUNC_LIST[673](loc_1, loc_2)
 			reg_0 = FUNC_LIST[532](loc_1, loc_2, rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, reg_2)), 39)
 			FUNC_LIST[702](reg_0, 35)
-			reg_0 = FUNC_LIST[532](loc_1, loc_2, (if bit_and(rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 84), 256) ~= 0 then 2147483647 else 2147483648), rt_load_i32(memory_at_0, loc_0 + 88))
+			reg_0 = FUNC_LIST[532](loc_1, loc_2, (if bit32.band(rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 84), 256) ~= 0 then 2147483647 else 2147483648), rt_load_i32(memory_at_0, loc_0 + 88))
 			loc_1 = reg_0
 			loc_2 = rt_add_i32(loc_0, 140)
 			rt_store_i32_n16(memory_at_0, loc_1 + 148, rt_load_i32_u16(memory_at_0, loc_2 + 8))
 			rt_store_i64(memory_at_0, loc_1 + 140, rt_load_i64(memory_at_0, loc_2))
 			rt_store_i32(memory_at_0, loc_1 + 32, rt_shl_i32(rt_div_i32(rt_load_i32_i16(memory_at_0, loc_0 + 144), 45), 29))
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 148), 8) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 148), 8) == 0 then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_1 + 104, bit_or(rt_load_i32(memory_at_0, loc_1 + 104), 32))
+				rt_store_i32(memory_at_0, loc_1 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_1 + 104), 32))
 				break
 			end
 			if desired then
@@ -44150,7 +44139,7 @@ FUNC_LIST[531] = function(loc_0)
 			end
 			rt_store_i32(memory_at_0, loc_1 + 124, 18)
 			while true do
-				if bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 131073) ~= 1 then
+				if bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 131073) ~= 1 then
 					break
 				end
 				while true do
@@ -44178,13 +44167,13 @@ FUNC_LIST[531] = function(loc_0)
 				loc_4 = rt_add_i32(GLOBAL_LIST[430].value, rt_mul_i32(loc_1, 10))
 				rt_store_i32_n16(memory_at_0, loc_4 + 8, rt_load_i32_u16(memory_at_0, loc_2 + 8))
 				rt_store_i64(memory_at_0, loc_4, rt_load_i64(memory_at_0, loc_2))
-				loc_2 = bit_and(rt_add_i32(loc_1, 1), 127)
+				loc_2 = bit32.band(rt_add_i32(loc_1, 1), 127)
 				rt_store_i32(memory_at_0, loc_3, loc_2)
 				rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[431].value, rt_shl_i32(loc_1, 2)), rt_load_i32(memory_at_0, GLOBAL_LIST[209].value))
 				if loc_2 ~= rt_load_i32(memory_at_0, GLOBAL_LIST[432].value) then
 					break
 				end
-				rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit_and(rt_add_i32(loc_1, 2), 127))
+				rt_store_i32(memory_at_0, GLOBAL_LIST[432].value, bit32.band(rt_add_i32(loc_1, 2), 127))
 				break
 			end
 			if desired then
@@ -44285,7 +44274,7 @@ FUNC_LIST[533] = function(loc_0)
 					if rt_load_i32(memory_at_0, loc_0 + 76) ~= 0 then
 						break
 					end
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 107), 1) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 107), 1) == 0 then
 						desired = 2
 						break
 					end
@@ -44363,7 +44352,7 @@ FUNC_LIST[533] = function(loc_0)
 			end
 			loc_1 = rt_load_i32_u8(memory_at_0, loc_0 + 106)
 			loc_2 = GLOBAL_LIST[205].value
-			if bit_and(loc_1, 64) == 0 then
+			if bit32.band(loc_1, 64) == 0 then
 				break
 			end
 			if rt_load_i32(memory_at_0, loc_2) == 0 then
@@ -44374,7 +44363,7 @@ FUNC_LIST[533] = function(loc_0)
 			if rt_lt_i32(loc_1, 419) then
 				break
 			end
-			if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
 				break
 			end
 			reg_0 = FUNC_LIST[70]()
@@ -44457,17 +44446,17 @@ FUNC_LIST[534] = function()
 						end
 						break
 					end
-					loc_5 = bit_or(loc_0, 1)
+					loc_5 = bit32.bor(loc_0, 1)
 					if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_5, 92))) == loc_1 then
 						desired = 2
 						break
 					end
-					loc_5 = bit_or(loc_0, 2)
+					loc_5 = bit32.bor(loc_0, 2)
 					if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_5, 92))) == loc_1 then
 						desired = 2
 						break
 					end
-					loc_5 = bit_or(loc_0, 3)
+					loc_5 = bit32.bor(loc_0, 3)
 					if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_5, 92))) == loc_1 then
 						desired = 2
 						break
@@ -44489,13 +44478,13 @@ FUNC_LIST[534] = function()
 				end
 				break
 			end
-			reg_0 = FUNC_LIST[532](loc_4, loc_3, (if bit_and(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_5, 92)) + 84), 256) ~= 0 then 2147483647 else 2147483648), loc_5)
+			reg_0 = FUNC_LIST[532](loc_4, loc_3, (if bit32.band(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_5, 92)) + 84), 256) ~= 0 then 2147483647 else 2147483648), loc_5)
 			loc_0 = reg_0
 			rt_store_i32_n16(memory_at_0, loc_0 + 148, rt_load_i32_u16(memory_at_0, loc_2 + 8))
 			rt_store_i64(memory_at_0, loc_0 + 140, rt_load_i64(memory_at_0, loc_2))
 			rt_store_i32(memory_at_0, loc_0 + 32, rt_shl_i32(rt_div_i32(rt_load_i32_i16(memory_at_0, loc_2 + 4), 45), 29))
 			loc_0 = GLOBAL_LIST[432].value
-			rt_store_i32(memory_at_0, loc_0, bit_and(rt_add_i32(rt_load_i32(memory_at_0, loc_0), 1), 127))
+			rt_store_i32(memory_at_0, loc_0, bit32.band(rt_add_i32(rt_load_i32(memory_at_0, loc_0), 1), 127))
 			break
 		end
 		break
@@ -44531,7 +44520,7 @@ FUNC_LIST[535] = function(loc_0)
 				if rt_lt_i32(loc_3, 2) then
 					break
 				end
-				rt_store_i32(memory_at_0, loc_2 + 104, bit_or(rt_load_i32(memory_at_0, loc_2 + 104), rt_add_i32(rt_shl_i32(loc_3, 26), 4227858432)))
+				rt_store_i32(memory_at_0, loc_2 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_2 + 104), rt_add_i32(rt_shl_i32(loc_3, 26), 4227858432)))
 				break
 			end
 			loc_3 = rt_load_i32_i16(memory_at_0, loc_0 + 4)
@@ -44630,7 +44619,7 @@ FUNC_LIST[536] = function(loc_0)
 				if rt_load_i32(memory_at_0, GLOBAL_LIST[40].value) ~= 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 8), 16) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 8), 16) ~= 0 then
 					desired = 1
 					break
 				end
@@ -44688,7 +44677,7 @@ FUNC_LIST[536] = function(loc_0)
 				end
 				break
 			end
-			if bit_and(loc_3, rt_load_i32_i16(memory_at_0, loc_0 + 8)) == 0 then
+			if bit32.band(loc_3, rt_load_i32_i16(memory_at_0, loc_0 + 8)) == 0 then
 				break
 			end
 			loc_3 = 0
@@ -44713,17 +44702,17 @@ FUNC_LIST[536] = function(loc_0)
 						if loc_3 == 136 then
 							break
 						end
-						loc_4 = bit_or(loc_3, 1)
+						loc_4 = bit32.bor(loc_3, 1)
 						if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92))) == loc_2 then
 							desired = 2
 							break
 						end
-						loc_4 = bit_or(loc_3, 2)
+						loc_4 = bit32.bor(loc_3, 2)
 						if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92))) == loc_2 then
 							desired = 2
 							break
 						end
-						loc_4 = bit_or(loc_3, 3)
+						loc_4 = bit32.bor(loc_3, 3)
 						if rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92))) == loc_2 then
 							desired = 2
 							break
@@ -44765,7 +44754,7 @@ FUNC_LIST[536] = function(loc_0)
 				if rt_load_i32(memory_at_0, GLOBAL_LIST[31].value) == 0 then
 					break
 				end
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92)) + 87), 2) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92)) + 87), 2) ~= 0 then
 					desired = 1
 					break
 				end
@@ -44797,7 +44786,7 @@ FUNC_LIST[536] = function(loc_0)
 					break
 				end
 				loc_2 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_4, 92)) + 84)
-				if bit_and(loc_2, 4194304) ~= 0 then
+				if bit32.band(loc_2, 4194304) ~= 0 then
 					desired = 1
 					break
 				end
@@ -44809,7 +44798,7 @@ FUNC_LIST[536] = function(loc_0)
 				end
 				break
 			end
-			reg_0 = FUNC_LIST[532](rt_shl_i32(rt_load_i32_u16(memory_at_0, loc_0), 16), rt_shl_i32(rt_load_i32_u16(memory_at_0, loc_0 + 2), 16), (if bit_and(loc_2, 256) ~= 0 then 2147483647 else 2147483648), loc_4)
+			reg_0 = FUNC_LIST[532](rt_shl_i32(rt_load_i32_u16(memory_at_0, loc_0), 16), rt_shl_i32(rt_load_i32_u16(memory_at_0, loc_0 + 2), 16), (if bit32.band(loc_2, 256) ~= 0 then 2147483647 else 2147483648), loc_4)
 			loc_2 = reg_0
 			rt_store_i32_n16(memory_at_0, loc_2 + 148, rt_load_i32_u16(memory_at_0, loc_0 + 8))
 			rt_store_i64(memory_at_0, loc_2 + 140, rt_load_i64(memory_at_0, loc_0))
@@ -44829,7 +44818,7 @@ FUNC_LIST[536] = function(loc_0)
 			end
 			while true do
 				loc_3 = rt_load_i32(memory_at_0, loc_2 + 104)
-				if bit_and(loc_3, 4194304) == 0 then
+				if bit32.band(loc_3, 4194304) == 0 then
 					break
 				end
 				loc_4 = GLOBAL_LIST[215].value
@@ -44843,7 +44832,7 @@ FUNC_LIST[536] = function(loc_0)
 				break
 			end
 			while true do
-				if bit_and(loc_3, 8388608) == 0 then
+				if bit32.band(loc_3, 8388608) == 0 then
 					break
 				end
 				loc_4 = GLOBAL_LIST[216].value
@@ -44857,10 +44846,10 @@ FUNC_LIST[536] = function(loc_0)
 				break
 			end
 			rt_store_i32(memory_at_0, loc_2 + 32, rt_shl_i32(rt_div_i32(rt_load_i32_i16(memory_at_0, loc_0 + 4), 45), 29))
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 8), 8) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 8), 8) == 0 then
 				break
 			end
-			rt_store_i32(memory_at_0, loc_2 + 104, bit_or(loc_3, 32))
+			rt_store_i32(memory_at_0, loc_2 + 104, bit32.bor(loc_3, 32))
 			break
 		end
 		GLOBAL_LIST[0].value = rt_add_i32(loc_1, 16)
@@ -44880,7 +44869,7 @@ FUNC_LIST[537] = function(loc_0, loc_1, loc_2)
 		rt_store_i32(memory_at_0, loc_2 + 80, 65536)
 		reg_0 = FUNC_LIST[70]()
 		loc_1 = reg_0
-		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_2 + 96), bit_and(loc_1, 3))
+		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_2 + 96), bit32.band(loc_1, 3))
 		rt_store_i32(memory_at_0, loc_2 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 		while true do
 			if rt_load_i32(memory_at_0, GLOBAL_LIST[402].value) ~= 4194304 then
@@ -44906,7 +44895,7 @@ FUNC_LIST[538] = function(loc_0, loc_1, loc_2, loc_3)
 		rt_store_i32(memory_at_0, loc_2 + 80, 131072)
 		reg_0 = FUNC_LIST[70]()
 		loc_1 = reg_0
-		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_2 + 96), bit_and(loc_1, 3))
+		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_2 + 96), bit32.band(loc_1, 3))
 		rt_store_i32(memory_at_0, loc_2 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 		while true do
 			while true do
@@ -44956,7 +44945,7 @@ FUNC_LIST[539] = function(loc_0)
 		loc_3 = rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 16), rt_shr_i32(rt_load_i32(memory_at_0, loc_0 + 76), 1))
 		rt_store_i32(memory_at_0, loc_0 + 16, loc_3)
 		rt_store_i32(memory_at_0, loc_0 + 20, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 20), rt_shr_i32(rt_load_i32(memory_at_0, loc_0 + 80), 1)))
-		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_1, 3))
+		loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_1, 3))
 		rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 		while true do
 			reg_0 = FUNC_LIST[495](loc_0, loc_2, loc_3)
@@ -44969,8 +44958,8 @@ FUNC_LIST[539] = function(loc_0)
 			reg_0 = FUNC_LIST[526](loc_0, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[126].value, rt_mul_i32(loc_1, 92)) + 48))
 			reg_0 = FUNC_LIST[70]()
 			loc_1 = reg_0
-			rt_store_i32(memory_at_0, loc_0 + 104, bit_and(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
-			loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit_and(loc_1, 3))
+			rt_store_i32(memory_at_0, loc_0 + 104, bit32.band(rt_load_i32(memory_at_0, loc_0 + 104), 4294901759))
+			loc_1 = rt_sub_i32(rt_load_i32(memory_at_0, loc_0 + 96), bit32.band(loc_1, 3))
 			rt_store_i32(memory_at_0, loc_0 + 96, (if rt_gt_i32(loc_1, 1) then loc_1 else 1))
 			loc_1 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0 + 92) + 56)
 			if loc_1 == 0 then
@@ -45020,7 +45009,7 @@ FUNC_LIST[541] = function(loc_0, loc_1, loc_2)
 		reg_0 = FUNC_LIST[663](rt_load_i32(memory_at_0, loc_0 + 12), rt_load_i32(memory_at_0, loc_0 + 16), rt_load_i32(memory_at_0, loc_1 + 12), rt_load_i32(memory_at_0, loc_1 + 16))
 		loc_3 = reg_0
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 106), 4) == 0 then
 				break
 			end
 			reg_0 = FUNC_LIST[70]()
@@ -45030,7 +45019,7 @@ FUNC_LIST[541] = function(loc_0, loc_1, loc_2)
 		end
 		rt_store_i32(memory_at_0, loc_2 + 32, loc_3)
 		loc_4 = GLOBAL_LIST[39].value
-		loc_3 = bit_and(rt_shr_u32(loc_3, 17), 32764)
+		loc_3 = bit32.band(rt_shr_u32(loc_3, 17), 32764)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_2 + 92) + 60), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), loc_3)))
 		rt_store_i32(memory_at_0, loc_2 + 72, reg_1)
 		loc_4 = GLOBAL_LIST[38].value
@@ -45110,7 +45099,7 @@ FUNC_LIST[542] = function(loc_0, loc_1)
 		rt_store_i32(memory_at_0, loc_2 + 120, loc_0)
 		loc_0 = GLOBAL_LIST[39].value
 		reg_2 = rt_load_i32(memory_at_0, loc_0)
-		loc_0 = bit_and(rt_shr_u32(loc_3, 17), 32764)
+		loc_0 = bit32.band(rt_shr_u32(loc_3, 17), 32764)
 		reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, loc_1 + 60), rt_load_i32(memory_at_0, rt_add_i32(reg_2, loc_0)))
 		rt_store_i32(memory_at_0, loc_2 + 72, reg_1)
 		loc_3 = GLOBAL_LIST[38].value
@@ -45220,13 +45209,13 @@ FUNC_LIST[544] = function(loc_0)
 		loc_1 = GLOBAL_LIST[209].value
 		loc_2 = rt_load_i32(memory_at_0, loc_1)
 		loc_3 = GLOBAL_LIST[38].value
-		loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(bit_and(rt_mul_i32(loc_2, 117), 8191), 2)))
+		loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(bit32.band(rt_mul_i32(loc_2, 117), 8191), 2)))
 		loc_0 = rt_load_i32(memory_at_0, loc_0 + 36)
 		reg_0 = GLOBAL_LIST[433].value
 		reg_1 = FUNC_LIST[314](loc_0, loc_2)
 		loc_0 = reg_1
 		rt_store_i32(memory_at_0, reg_0, loc_0)
-		reg_0 = FUNC_LIST[314](loc_0, rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(bit_xor(bit_and(rt_mul_i32(rt_load_i32(memory_at_0, loc_1), 117), 8191), 4096), 2))))
+		reg_0 = FUNC_LIST[314](loc_0, rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(bit32.bxor(bit32.band(rt_mul_i32(rt_load_i32(memory_at_0, loc_1), 117), 8191), 4096), 2))))
 		loc_0 = reg_0
 		rt_store_i32(memory_at_0, GLOBAL_LIST[434].value, rt_sub_i32(0, loc_0))
 		break
@@ -45986,7 +45975,7 @@ FUNC_LIST[549] = function(loc_0, loc_1)
 			end
 			while true do
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 13), 1) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 13), 1) == 0 then
 						break
 					end
 					while true do
@@ -46035,10 +46024,10 @@ FUNC_LIST[549] = function(loc_0, loc_1)
 			loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[209].value)
 			loc_4 = GLOBAL_LIST[39].value
 			loc_2 = rt_shl_i32(loc_2, 9)
-			reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, loc_0 + 36), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), bit_and(loc_2, 32256))))
+			reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, loc_0 + 36), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_4), bit32.band(loc_2, 32256))))
 			rt_store_i32(memory_at_0, loc_1 + 8, rt_add_i32(reg_1, 65536))
 			loc_4 = GLOBAL_LIST[38].value
-			reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, loc_0 + 36), rt_load_i32(memory_at_0, rt_add_i32(loc_4, bit_and(loc_2, 15872))))
+			reg_1 = FUNC_LIST[314](rt_load_i32(memory_at_0, loc_0 + 36), rt_load_i32(memory_at_0, rt_add_i32(loc_4, bit32.band(loc_2, 15872))))
 			rt_store_i32(memory_at_0, loc_1 + 12, rt_add_i32(reg_1, 2097152))
 			break
 		end
@@ -46056,7 +46045,7 @@ FUNC_LIST[550] = function(loc_0, loc_1)
 	local desired
 	while true do
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 13), 1) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 13), 1) == 0 then
 				break
 			end
 			if rt_load_i32(memory_at_0, loc_0 + 124) ~= 10 then
@@ -46553,7 +46542,7 @@ FUNC_LIST[556] = function(loc_0, loc_1)
 			break
 		end
 		rt_store_i32(memory_at_0, loc_0 + 32, loc_2)
-		rt_store_i32(memory_at_0, loc_0 + 104, bit_or(rt_load_i32(memory_at_0, loc_0 + 104), 128))
+		rt_store_i32(memory_at_0, loc_0 + 104, bit32.bor(rt_load_i32(memory_at_0, loc_0 + 104), 128))
 		break
 	end
 end
@@ -46592,7 +46581,7 @@ FUNC_LIST[559] = function(loc_0, loc_1)
 		rt_store_i32(memory_at_0, loc_2, rt_add_i32(rt_load_i32(memory_at_0, loc_2), 4294967295))
 		reg_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_mul_i32(rt_load_i32(memory_at_0, loc_0 + 120), 24)) + 20)
 		reg_1 = FUNC_LIST[70]()
-		loc_2 = rt_add_i32(reg_0, bit_and(reg_1, 1))
+		loc_2 = rt_add_i32(reg_0, bit32.band(reg_1, 1))
 		loc_4 = rt_add_i32(loc_0, 268)
 		while true do
 			while true do
@@ -47381,7 +47370,7 @@ FUNC_LIST[569] = function(loc_0)
 				reg_0 = FUNC_LIST[70]()
 				loc_17 = reg_0
 				loc_2 = rt_load_i32(memory_at_0, loc_0 + 120)
-				FUNC_LIST[477](rt_load_i32(memory_at_0, GLOBAL_LIST[407].value), loc_2, loc_2, rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(bit_and(loc_3, 7), bit_and(loc_4, 7)), bit_and(loc_5, 7)), bit_and(loc_6, 7)), bit_and(loc_7, 7)), bit_and(loc_8, 7)), bit_and(loc_9, 7)), bit_and(loc_10, 7)), bit_and(loc_11, 7)), bit_and(loc_12, 7)), bit_and(loc_13, 7)), bit_and(loc_14, 7)), bit_and(loc_15, 7)), bit_and(loc_16, 7)), bit_and(loc_17, 7)), 15))
+				FUNC_LIST[477](rt_load_i32(memory_at_0, GLOBAL_LIST[407].value), loc_2, loc_2, rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(bit32.band(loc_3, 7), bit32.band(loc_4, 7)), bit32.band(loc_5, 7)), bit32.band(loc_6, 7)), bit32.band(loc_7, 7)), bit32.band(loc_8, 7)), bit32.band(loc_9, 7)), bit32.band(loc_10, 7)), bit32.band(loc_11, 7)), bit32.band(loc_12, 7)), bit32.band(loc_13, 7)), bit32.band(loc_14, 7)), bit32.band(loc_15, 7)), bit32.band(loc_16, 7)), bit32.band(loc_17, 7)), 15))
 				break
 			end
 			loc_1 = rt_add_i32(loc_1, 1)
@@ -47817,7 +47806,7 @@ FUNC_LIST[575] = function(loc_0)
 				rt_store_i32(memory_at_0, loc_2 + 24, rt_load_i32(memory_at_0, loc_10 + 16))
 				while true do
 					while true do
-						if bit_and(rt_load_i32_u8(memory_at_0, loc_3 + 16), 4) ~= 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, loc_3 + 16), 4) ~= 0 then
 							break
 						end
 						loc_3 = 0
@@ -47830,7 +47819,7 @@ FUNC_LIST[575] = function(loc_0)
 						end
 						break
 					end
-					loc_3 = rt_load_i32_i16(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(bit_xor(loc_9, 1), 1)))
+					loc_3 = rt_load_i32_i16(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(bit32.bxor(loc_9, 1), 1)))
 					loc_10 = GLOBAL_LIST[437].value
 					while true do
 						while true do
@@ -47946,13 +47935,13 @@ FUNC_LIST[576] = function(loc_0)
 			if rt_lt_i32(loc_3, 1) then
 				break
 			end
-			loc_4 = bit_and(loc_3, 3)
+			loc_4 = bit32.band(loc_3, 3)
 			loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[439].value)
 			while true do
 				if loc_3 < 4 then
 					break
 				end
-				loc_5 = bit_and(loc_3, 2147483644)
+				loc_5 = bit32.band(loc_3, 2147483644)
 				loc_3 = 0
 				while true do
 					rt_store_i32_n16(memory_at_0, loc_2 + 4, rt_load_i32_u16(memory_at_0, loc_1))
@@ -48157,7 +48146,7 @@ FUNC_LIST[579] = function(loc_0)
 					if loc_6 > 25 then
 						break
 					end
-					if bit_and(rt_shl_i32(1, loc_6), 51380415) ~= 0 then
+					if bit32.band(rt_shl_i32(1, loc_6), 51380415) ~= 0 then
 						desired = 1
 						break
 					end
@@ -48497,13 +48486,13 @@ FUNC_LIST[583] = function()
 			if rt_lt_i32(loc_1, 1) then
 				break
 			end
-			loc_2 = bit_and(loc_1, 3)
+			loc_2 = bit32.band(loc_1, 3)
 			loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[439].value)
 			while true do
 				if loc_1 < 4 then
 					break
 				end
-				loc_4 = bit_and(loc_1, 2147483644)
+				loc_4 = bit32.band(loc_1, 2147483644)
 				loc_5 = 0
 				while true do
 					loc_1 = rt_load_i32_i16(memory_at_0, loc_3 + 6)
@@ -48949,13 +48938,13 @@ FUNC_LIST[584] = function(loc_0, loc_1, loc_2, loc_3)
 			if rt_lt_i32(loc_0, 1) then
 				break
 			end
-			loc_7 = bit_and(loc_0, 3)
+			loc_7 = bit32.band(loc_0, 3)
 			loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[439].value)
 			while true do
 				if loc_0 < 4 then
 					break
 				end
-				loc_9 = bit_and(loc_0, 2147483644)
+				loc_9 = bit32.band(loc_0, 2147483644)
 				loc_0 = 0
 				while true do
 					rt_store_i32_n16(memory_at_0, loc_1 + 4, rt_load_i32_u16(memory_at_0, loc_5))
@@ -49057,15 +49046,15 @@ FUNC_LIST[584] = function(loc_0, loc_1, loc_2, loc_3)
 						break
 					end
 					loc_5 = (if loc_11 < 16 then loc_11 else 16)
-					loc_12 = bit_and(loc_5, 1)
-					loc_8 = bit_and(loc_5, 30)
+					loc_12 = bit32.band(loc_5, 1)
+					loc_8 = bit32.band(loc_5, 30)
 					loc_5 = 0
 					loc_1 = loc_10
 					loc_0 = 0
 					while true do
-						loc_7 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(loc_4, 48), bit_and(loc_5, 4294967292)))
-						loc_9 = bit_and(rt_shl_i32(loc_5, 3), 16)
-						rt_store_i32_n8(memory_at_0, loc_1 + 1, rt_shr_u32(loc_7, bit_or(loc_9, 8)))
+						loc_7 = rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(loc_4, 48), bit32.band(loc_5, 4294967292)))
+						loc_9 = bit32.band(rt_shl_i32(loc_5, 3), 16)
+						rt_store_i32_n8(memory_at_0, loc_1 + 1, rt_shr_u32(loc_7, bit32.bor(loc_9, 8)))
 						rt_store_i32_n8(memory_at_0, loc_1, rt_shr_u32(loc_7, loc_9))
 						loc_5 = rt_add_i32(loc_5, 2)
 						loc_1 = rt_add_i32(loc_1, 2)
@@ -49093,7 +49082,7 @@ FUNC_LIST[584] = function(loc_0, loc_1, loc_2, loc_3)
 					end
 					break
 				end
-				rt_store_i32_n8(memory_at_0, loc_1, rt_shr_u32(rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(loc_4, 48), bit_and(loc_5, 4294967292))), rt_shl_i32(loc_5, 3)))
+				rt_store_i32_n8(memory_at_0, loc_1, rt_shr_u32(rt_load_i32(memory_at_0, rt_add_i32(rt_add_i32(loc_4, 48), bit32.band(loc_5, 4294967292))), rt_shl_i32(loc_5, 3)))
 				break
 			end
 			if desired then
@@ -49143,7 +49132,7 @@ FUNC_LIST[584] = function(loc_0, loc_1, loc_2, loc_3)
 					if loc_7 > 25 then
 						break
 					end
-					if bit_and(rt_shl_i32(1, loc_7), 51380415) ~= 0 then
+					if bit32.band(rt_shl_i32(1, loc_7), 51380415) ~= 0 then
 						desired = 1
 						break
 					end
@@ -49789,7 +49778,7 @@ FUNC_LIST[588] = function(loc_0)
 							desired = 1
 							break
 						end
-						if bit_and(rt_load_i32_u8(memory_at_0, loc_2 + 16), 4) == 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, loc_2 + 16), 4) == 0 then
 							desired = 1
 							break
 						end
@@ -49953,7 +49942,7 @@ FUNC_LIST[589] = function(loc_0)
 	while true do
 		while true do
 			while true do
-				if bit_and(loc_0, 32768) ~= 0 then
+				if bit32.band(loc_0, 32768) ~= 0 then
 					break
 				end
 				while true do
@@ -50211,8 +50200,8 @@ FUNC_LIST[589] = function(loc_0)
 						end
 						break
 					end
-					loc_1 = rt_load_i32_i16(memory_at_0, rt_add_i32(loc_4, rt_shl_i32(bit_xor(loc_1, 1), 1)))
-					loc_0 = bit_and(loc_1, 65535)
+					loc_1 = rt_load_i32_i16(memory_at_0, rt_add_i32(loc_4, rt_shl_i32(bit32.bxor(loc_1, 1), 1)))
+					loc_0 = bit32.band(loc_1, 65535)
 					if rt_gt_i32(loc_1, 4294967295) then
 						continue
 					end
@@ -50246,7 +50235,7 @@ FUNC_LIST[589] = function(loc_0)
 			end
 			break
 		end
-		reg_0 = FUNC_LIST[588](bit_and(loc_0, 4294934527))
+		reg_0 = FUNC_LIST[588](bit32.band(loc_0, 4294934527))
 		break
 	end
 	return reg_0
@@ -50265,7 +50254,7 @@ FUNC_LIST[590] = function(loc_0, loc_1)
 		loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[44].value)
 		while true do
 			loc_2 = rt_add_i32(rt_div_i32(rt_sub_i32(loc_3, loc_2), 88), rt_mul_i32(loc_5, rt_div_i32(rt_sub_i32(loc_4, loc_2), 88)))
-			if bit_and(rt_shr_u32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[442].value), rt_shr_i32(loc_2, 3))), bit_and(loc_2, 7)), 1) == 0 then
+			if bit32.band(rt_shr_u32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[442].value), rt_shr_i32(loc_2, 3))), bit32.band(loc_2, 7)), 1) == 0 then
 				break
 			end
 			loc_1 = GLOBAL_LIST[448].value
@@ -50451,7 +50440,7 @@ end
 FUNC_LIST[594] = function(loc_0, loc_1)
 	local reg_0
 	while true do
-		reg_0 = bit_and(rt_load_i32_u16(memory_at_0, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[45].value), rt_mul_i32(loc_0, 88)) + 84), rt_shl_i32(loc_1, 2))) + 16), 4)
+		reg_0 = bit32.band(rt_load_i32_u16(memory_at_0, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[45].value), rt_mul_i32(loc_0, 88)) + 84), rt_shl_i32(loc_1, 2))) + 16), 4)
 		break
 	end
 	return reg_0
@@ -50462,7 +50451,7 @@ FUNC_LIST[595] = function(loc_0, loc_1)
 	while true do
 		loc_2 = 0
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 16), 4) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 16), 4) == 0 then
 				break
 			end
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 48)
@@ -50497,7 +50486,7 @@ FUNC_LIST[596] = function(loc_0)
 			while true do
 				while true do
 					loc_5 = rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(loc_4, 2)))
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
 						break
 					end
 					while true do
@@ -50559,7 +50548,7 @@ FUNC_LIST[597] = function(loc_0)
 		while true do
 			while true do
 				loc_5 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, rt_shl_i32(loc_3, 2)))
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
 					break
 				end
 				while true do
@@ -50633,7 +50622,7 @@ FUNC_LIST[598] = function(loc_0, loc_1)
 			while true do
 				while true do
 					loc_7 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_0 + 84), rt_shl_i32(loc_5, 2)))
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_7 + 16), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_7 + 16), 4) == 0 then
 						break
 					end
 					while true do
@@ -50735,7 +50724,7 @@ FUNC_LIST[598] = function(loc_0, loc_1)
 				break
 			end
 			loc_5 = rt_add_i32(loc_6, 4294967295)
-			loc_4 = bit_and(loc_5, 3)
+			loc_4 = bit32.band(loc_5, 3)
 			while true do
 				while true do
 					if rt_add_i32(loc_6, 4294967294) >= 3 then
@@ -50751,7 +50740,7 @@ FUNC_LIST[598] = function(loc_0, loc_1)
 					end
 					break
 				end
-				loc_9 = bit_and(loc_5, 4294967292)
+				loc_9 = bit32.band(loc_5, 4294967292)
 				loc_0 = 0
 				loc_5 = 1
 				while true do
@@ -50845,7 +50834,7 @@ FUNC_LIST[599] = function(loc_0)
 		while true do
 			while true do
 				loc_5 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, rt_shl_i32(loc_3, 2)))
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
 					break
 				end
 				while true do
@@ -50924,7 +50913,7 @@ FUNC_LIST[600] = function(loc_0)
 		while true do
 			while true do
 				loc_5 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, rt_shl_i32(loc_4, 2)))
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
 					break
 				end
 				while true do
@@ -51031,7 +51020,7 @@ FUNC_LIST[602] = function(loc_0, loc_1)
 			while true do
 				while true do
 					loc_5 = rt_load_i32(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(loc_4, 2)))
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_5 + 16), 4) == 0 then
 						break
 					end
 					while true do
@@ -51232,7 +51221,7 @@ FUNC_LIST[603] = function(loc_0, loc_1, loc_2)
 																																																																													return { [0] = 0, 1, 2, 3, 4, 72, 5, 72, 6, 72, 7, 8, 72, 72, 9, 10, 72, 11, 72, 72, 12, 72, 72, 13, 72, 72, 72, 72, 14, 72, 72, 72, 72, 15, 16, 17, 18, 19, 20, 72, 72, 72, 21, 72, 72, 72, 72, 72, 72, 72, 22, 23, 24, 72, 25, 26, 27, 28, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 40, 41, 42, 43, 44, 45, 72, 46, 47, 48, 49, 50, 51, 72, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 72, 32, 72, 72, 72, 29, 65, 66, 67, 30, 31, 33, 72, 72, 72, 72, 72, 72, 72, 72, 34, 68, 35, 72, 72, 36, 37, 69, 72, 70, 71, 38, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 39, }
 																																																																												end)()
 																																																																											end
-																																																																											temp = br_map[3][rt_add_i32(bit_and(loc_4, 65535), 4294967294)] or 72
+																																																																											temp = br_map[3][rt_add_i32(bit32.band(loc_4, 65535), 4294967294)] or 72
 																																																																											if temp < 36 then
 																																																																												if temp < 18 then
 																																																																													if temp < 9 then
@@ -52465,7 +52454,7 @@ FUNC_LIST[605] = function(loc_0)
 									desired = 1
 									break
 								end
-								if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
+								if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
 									desired = 1
 									break
 								end
@@ -52483,7 +52472,7 @@ FUNC_LIST[605] = function(loc_0)
 								desired = 1
 								break
 							end
-							if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
+							if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
 								desired = 1
 								break
 							end
@@ -52514,7 +52503,7 @@ FUNC_LIST[605] = function(loc_0)
 							end
 							break
 						end
-						if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
 							desired = 1
 							break
 						end
@@ -52539,9 +52528,9 @@ FUNC_LIST[605] = function(loc_0)
 					end
 					break
 				end
-				rt_store_i32(memory_at_0, loc_0 + 204, bit_and(rt_load_i32(memory_at_0, loc_0 + 204), 4294967293))
+				rt_store_i32(memory_at_0, loc_0 + 204, bit32.band(rt_load_i32(memory_at_0, loc_0 + 204), 4294967293))
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, GLOBAL_LIST[209].value), 31) ~= 0 then
 						break
 					end
 					FUNC_LIST[477](loc_2, 0, 0, 20)
@@ -52669,7 +52658,7 @@ FUNC_LIST[606] = function()
 				if loc_4 == 1 then
 					break
 				end
-				loc_3 = bit_and(loc_4, 32766)
+				loc_3 = bit32.band(loc_4, 32766)
 				loc_0 = 0
 				loc_6 = 0
 				while true do
@@ -52719,7 +52708,7 @@ FUNC_LIST[606] = function()
 					end
 					break
 				end
-				if bit_and(loc_4, 1) == 0 then
+				if bit32.band(loc_4, 1) == 0 then
 					desired = 1
 					break
 				end
@@ -52881,7 +52870,7 @@ FUNC_LIST[607] = function(loc_0)
 				end
 				while true do
 					loc_7 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_8 + 84))
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_7 + 16), 4) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_7 + 16), 4) == 0 then
 						break
 					end
 					while true do
@@ -53363,7 +53352,7 @@ FUNC_LIST[609] = function()
 	local desired
 	while true do
 		loc_0 = rt_load_i32(memory_at_0, GLOBAL_LIST[90].value)
-		loc_1 = (if bit_and(loc_0, 4294967293) == 1 then 2 else (if loc_0 == 2 then 3 else 1))
+		loc_1 = (if bit32.band(loc_0, 4294967293) == 1 then 2 else (if loc_0 == 2 then 3 else 1))
 		loc_2 = 0
 		loc_0 = 0
 		while true do
@@ -53730,13 +53719,13 @@ FUNC_LIST[610] = function(loc_0, loc_1, loc_2, loc_3)
 				break
 			end
 			while true do
-				loc_7 = bit_or(bit_or((if loc_5 == 0 then 1 else 0), (if loc_6 == 0 then 1 else 0)), (if loc_7 == 0 then 1 else 0))
-				loc_9 = bit_or(bit_or(loc_7, (if loc_8 == 0 then 1 else 0)), (if loc_9 == 0 then 1 else 0))
-				loc_21 = bit_or(bit_or(loc_9, (if loc_10 == 0 then 1 else 0)), (if loc_11 == 0 then 1 else 0))
-				loc_13 = bit_or(bit_or(loc_21, (if loc_12 == 0 then 1 else 0)), (if loc_13 == 0 then 1 else 0))
-				loc_15 = bit_or(bit_or(loc_13, (if loc_14 == 0 then 1 else 0)), (if loc_15 == 0 then 1 else 0))
-				loc_17 = bit_or(bit_or(loc_15, (if loc_16 == 0 then 1 else 0)), (if loc_17 == 0 then 1 else 0))
-				loc_11 = bit_and(bit_or(bit_or(loc_17, (if loc_18 == 0 then 1 else 0)), (if loc_19 == 0 then 1 else 0)), 1)
+				loc_7 = bit32.bor(bit32.bor((if loc_5 == 0 then 1 else 0), (if loc_6 == 0 then 1 else 0)), (if loc_7 == 0 then 1 else 0))
+				loc_9 = bit32.bor(bit32.bor(loc_7, (if loc_8 == 0 then 1 else 0)), (if loc_9 == 0 then 1 else 0))
+				loc_21 = bit32.bor(bit32.bor(loc_9, (if loc_10 == 0 then 1 else 0)), (if loc_11 == 0 then 1 else 0))
+				loc_13 = bit32.bor(bit32.bor(loc_21, (if loc_12 == 0 then 1 else 0)), (if loc_13 == 0 then 1 else 0))
+				loc_15 = bit32.bor(bit32.bor(loc_13, (if loc_14 == 0 then 1 else 0)), (if loc_15 == 0 then 1 else 0))
+				loc_17 = bit32.bor(bit32.bor(loc_15, (if loc_16 == 0 then 1 else 0)), (if loc_17 == 0 then 1 else 0))
+				loc_11 = bit32.band(bit32.bor(bit32.bor(loc_17, (if loc_18 == 0 then 1 else 0)), (if loc_19 == 0 then 1 else 0)), 1)
 				if loc_11 ~= 0 then
 					break
 				end
@@ -53754,10 +53743,10 @@ FUNC_LIST[610] = function(loc_0, loc_1, loc_2, loc_3)
 				break
 			end
 			loc_4 = GLOBAL_LIST[458].value
-			loc_19 = bit_and(loc_21, 1)
-			loc_13 = bit_and(loc_13, 1)
-			loc_15 = bit_and(loc_15, 1)
-			loc_17 = bit_and(loc_17, 1)
+			loc_19 = bit32.band(loc_21, 1)
+			loc_13 = bit32.band(loc_13, 1)
+			loc_15 = bit32.band(loc_15, 1)
+			loc_17 = bit32.band(loc_17, 1)
 			rt_store_i32(memory_at_0, rt_add_i32(loc_4, (if loc_11 ~= 0 then (if loc_17 ~= 0 then (if loc_15 ~= 0 then (if loc_13 ~= 0 then (if loc_19 ~= 0 then (if loc_9 ~= 0 then (if loc_7 ~= 0 then (if loc_5 ~= 0 then (if loc_6 ~= 0 then 40 else 20) else 0) else (if loc_8 ~= 0 then 80 else 60)) else (if loc_10 ~= 0 then 120 else 100)) else (if loc_12 ~= 0 then 160 else 140)) else (if loc_14 ~= 0 then 200 else 180)) else (if loc_16 ~= 0 then 240 else 220)) else (if loc_18 ~= 0 then 280 else 260)) else 300)), loc_0)
 			loc_4 = (if loc_11 ~= 0 then (if loc_17 ~= 0 then (if loc_15 ~= 0 then (if loc_13 ~= 0 then (if loc_19 ~= 0 then (if loc_9 ~= 0 then (if loc_7 ~= 0 then (if loc_5 ~= 0 then (if loc_6 ~= 0 then rt_add_i32(loc_4, 40) else rt_add_i32(loc_4, 20)) else loc_4) else (if loc_8 ~= 0 then rt_add_i32(loc_4, 80) else rt_add_i32(loc_4, 60))) else (if loc_10 ~= 0 then rt_add_i32(loc_4, 120) else rt_add_i32(loc_4, 100))) else (if loc_12 ~= 0 then rt_add_i32(loc_4, 160) else rt_add_i32(loc_4, 140))) else (if loc_14 ~= 0 then rt_add_i32(loc_4, 200) else rt_add_i32(loc_4, 180))) else (if loc_16 ~= 0 then rt_add_i32(loc_4, 240) else rt_add_i32(loc_4, 220))) else (if loc_18 ~= 0 then rt_add_i32(loc_4, 280) else rt_add_i32(loc_4, 260))) else rt_add_i32(loc_4, 300))
 			rt_store_i32(memory_at_0, loc_4 + 12, loc_3)
@@ -53830,7 +53819,7 @@ FUNC_LIST[611] = function(loc_0, loc_1)
 							end
 							FUNC_LIST[702](rt_load_i32(memory_at_0, GLOBAL_LIST[458].value + 16), loc_2)
 							loc_4 = rt_load_i32_i16(memory_at_0, loc_0 + 22)
-							rt_store_i32_n16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[346].value), rt_mul_i32(loc_4, 20)) + 8, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[463].value, rt_shl_i32(bit_xor(loc_3, 1), 2))))
+							rt_store_i32_n16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[346].value), rt_mul_i32(loc_4, 20)) + 8, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[463].value, rt_shl_i32(bit32.bxor(loc_3, 1), 2))))
 							loc_4 = 0
 							if loc_1 ~= 0 then
 								desired = 4
@@ -53852,7 +53841,7 @@ FUNC_LIST[611] = function(loc_0, loc_1)
 							FUNC_LIST[702](rt_load_i32(memory_at_0, GLOBAL_LIST[458].value + 16), loc_2)
 							loc_5 = rt_load_i32_i16(memory_at_0, loc_0 + 22)
 							loc_4 = 1
-							rt_store_i32_n16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[346].value), rt_mul_i32(loc_5, 20)) + 12, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[463].value, rt_shl_i32(bit_xor(loc_3, 1), 2))))
+							rt_store_i32_n16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[346].value), rt_mul_i32(loc_5, 20)) + 12, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[463].value, rt_shl_i32(bit32.bxor(loc_3, 1), 2))))
 							if loc_1 ~= 0 then
 								desired = 4
 								break
@@ -53873,7 +53862,7 @@ FUNC_LIST[611] = function(loc_0, loc_1)
 						FUNC_LIST[702](rt_load_i32(memory_at_0, GLOBAL_LIST[458].value + 16), loc_2)
 						loc_5 = rt_load_i32_i16(memory_at_0, loc_0 + 22)
 						loc_4 = 2
-						rt_store_i32_n16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[346].value), rt_mul_i32(loc_5, 20)) + 10, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[463].value, rt_shl_i32(bit_xor(loc_3, 1), 2))))
+						rt_store_i32_n16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[346].value), rt_mul_i32(loc_5, 20)) + 10, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[463].value, rt_shl_i32(bit32.bxor(loc_3, 1), 2))))
 						if loc_1 == 0 then
 							desired = 1
 							break
@@ -53954,7 +53943,7 @@ FUNC_LIST[612] = function(loc_0, loc_1, loc_2)
 					break
 				end
 				loc_2 = 0
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_1 + 16), 32) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_1 + 16), 32) ~= 0 then
 					desired = 1
 					break
 				end
@@ -54035,7 +54024,7 @@ FUNC_LIST[612] = function(loc_0, loc_1, loc_2)
 																																																								return { [0] = 0, 51, 51, 51, 51, 51, 1, 51, 2, 51, 3, 51, 51, 4, 5, 51, 51, 6, 51, 7, 8, 51, 9, 51, 51, 0, 0, 0, 10, 51, 0, 0, 0, 0, 51, 51, 51, 51, 51, 51, 11, 28, 29, 51, 30, 51, 51, 51, 13, 14, 15, 51, 51, 51, 16, 51, 51, 51, 51, 31, 32, 33, 34, 35, 38, 36, 37, 39, 40, 41, 12, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 47, 51, 17, 18, 19, 51, 51, 51, 51, 51, 51, 51, 20, 21, 22, 42, 43, 44, 0, 0, 51, 51, 51, 23, 45, 51, 51, 51, 24, 51, 51, 51, 25, 46, 26, 47, 26, 47, 26, 48, 49, 27, }
 																																																							end)()
 																																																						end
-																																																						temp = br_map[2][rt_add_i32(bit_and(loc_3, 65535), 4294967295)] or 51
+																																																						temp = br_map[2][rt_add_i32(bit32.band(loc_3, 65535), 4294967295)] or 51
 																																																						if temp < 25 then
 																																																							if temp < 12 then
 																																																								if temp < 6 then
@@ -55024,7 +55013,7 @@ FUNC_LIST[613] = function(loc_0, loc_1, loc_2)
 			if loc_1 == 1 then
 				break
 			end
-			if bit_and(rt_load_i32(memory_at_0, loc_2 + 104), 65536) ~= 0 then
+			if bit32.band(rt_load_i32(memory_at_0, loc_2 + 104), 65536) ~= 0 then
 				break
 			end
 			loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[44].value)
@@ -55040,7 +55029,7 @@ FUNC_LIST[613] = function(loc_0, loc_1, loc_2)
 				break
 			end
 			loc_6 = rt_load_i32(memory_at_0, loc_6)
-			loc_7 = bit_and(loc_0, 65535)
+			loc_7 = bit32.band(loc_0, 65535)
 			loc_0 = 0
 			while true do
 				loc_1 = loc_5
@@ -55097,7 +55086,7 @@ FUNC_LIST[613] = function(loc_0, loc_1, loc_2)
 							reg_0 = FUNC_LIST[532](loc_5, loc_6, loc_0, 39)
 							FUNC_LIST[702](reg_0, 35)
 							loc_0 = rt_load_i32(memory_at_0, loc_1 + 32)
-							loc_0 = bit_and(rt_shr_u32(loc_0, 17), 32764)
+							loc_0 = bit32.band(rt_shr_u32(loc_0, 17), 32764)
 							loc_6 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_0))
 							loc_5 = rt_load_i32(memory_at_0, loc_1 + 16)
 							reg_0 = FUNC_LIST[532](rt_add_i32(rt_mul_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_0)), 20), rt_load_i32(memory_at_0, loc_1 + 12)), rt_add_i32(loc_5, rt_mul_i32(loc_6, 20)), rt_load_i32(memory_at_0, loc_2 + 20), 39)
@@ -55473,7 +55462,7 @@ FUNC_LIST[620] = function(loc_0, loc_1, loc_2)
 	local loc_4 = 0
 	local reg_0
 	while true do
-		loc_1 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_1 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		reg_0 = FUNC_LIST[314](loc_2, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1)))
 		loc_3 = reg_0
 		loc_4 = rt_load_i32(memory_at_0, loc_0)
@@ -55505,7 +55494,7 @@ FUNC_LIST[621] = function(loc_0)
 		loc_3 = GLOBAL_LIST[464].value
 		while true do
 			while true do
-				if bit_and(loc_1, 4) ~= 0 then
+				if bit32.band(loc_1, 4) ~= 0 then
 					break
 				end
 				if rt_load_i32(memory_at_0, loc_3) ~= 0 then
@@ -55535,7 +55524,7 @@ FUNC_LIST[621] = function(loc_0)
 			break
 		end
 		loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[209].value)
-		reg_0 = FUNC_LIST[314](rt_div_i32(loc_2, 2), rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, rt_shl_i32(bit_and(rt_mul_i32(loc_1, 409), 8191), 2))))
+		reg_0 = FUNC_LIST[314](rt_div_i32(loc_2, 2), rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, rt_shl_i32(bit32.band(rt_mul_i32(loc_1, 409), 8191), 2))))
 		loc_3 = reg_0
 		while true do
 			while true do
@@ -55642,7 +55631,7 @@ FUNC_LIST[622] = function(loc_0)
 				break
 			end
 			loc_1 = rt_shl_i32(loc_6, 11)
-			loc_3 = bit_and(rt_shr_u32(loc_2, 17), 32764)
+			loc_3 = bit32.band(rt_shr_u32(loc_2, 17), 32764)
 			reg_0 = FUNC_LIST[314](loc_1, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_3)))
 			loc_4 = reg_0
 			loc_5 = rt_load_i32(memory_at_0, loc_0)
@@ -55664,7 +55653,7 @@ FUNC_LIST[622] = function(loc_0)
 			end
 			loc_1 = rt_load_i32(memory_at_0, loc_1 + 32)
 			loc_3 = rt_shl_i32(loc_3, 11)
-			loc_1 = bit_and(rt_shr_u32(rt_add_i32(loc_1, 3221225472), 17), 32764)
+			loc_1 = bit32.band(rt_shr_u32(rt_add_i32(loc_1, 3221225472), 17), 32764)
 			reg_0 = FUNC_LIST[314](loc_3, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1)))
 			loc_4 = reg_0
 			loc_5 = rt_load_i32(memory_at_0, loc_0)
@@ -55807,7 +55796,7 @@ FUNC_LIST[623] = function(loc_0)
 			break
 		end
 		while true do
-			if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 13), 2) == 0 then
+			if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 13), 2) == 0 then
 				break
 			end
 			rt_store_i32(memory_at_0, loc_0 + 4, 2)
@@ -55824,14 +55813,14 @@ FUNC_LIST[624] = function(loc_0)
 	while true do
 		loc_1 = rt_load_i32(memory_at_0, loc_0)
 		loc_2 = rt_load_i32(memory_at_0, loc_1 + 104)
-		loc_3 = bit_or(bit_and(loc_2, 4294963199), bit_and(rt_shl_i32(rt_load_i32(memory_at_0, loc_0 + 204), 12), 4096))
+		loc_3 = bit32.bor(bit32.band(loc_2, 4294963199), bit32.band(rt_shl_i32(rt_load_i32(memory_at_0, loc_0 + 204), 12), 4096))
 		rt_store_i32(memory_at_0, loc_1 + 104, loc_3)
 		while true do
-			if bit_and(loc_2, 128) == 0 then
+			if bit32.band(loc_2, 128) == 0 then
 				break
 			end
 			rt_store_i32(memory_at_0, loc_0 + 8, 100)
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(loc_3, 4294967167))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(loc_3, 4294967167))
 			break
 		end
 		if desired then
@@ -55911,12 +55900,12 @@ FUNC_LIST[624] = function(loc_0)
 					break
 				end
 				while true do
-					if bit_and(loc_1, 4) == 0 then
+					if bit32.band(loc_1, 4) == 0 then
 						break
 					end
 					while true do
 						while true do
-							loc_2 = bit_and(rt_shr_u32(loc_1, 3), 7)
+							loc_2 = bit32.band(rt_shr_u32(loc_1, 3), 7)
 							if loc_2 ~= 0 then
 								break
 							end
@@ -56023,7 +56012,7 @@ FUNC_LIST[624] = function(loc_0)
 					end
 					break
 				end
-				if bit_and(loc_1, 2) == 0 then
+				if bit32.band(loc_1, 2) == 0 then
 					break
 				end
 				if rt_load_i32(memory_at_0, loc_0 + 200) ~= 0 then
@@ -56090,7 +56079,7 @@ FUNC_LIST[624] = function(loc_0)
 				break
 			end
 			loc_1 = rt_load_i32(memory_at_0, loc_0)
-			rt_store_i32(memory_at_0, loc_1 + 104, bit_and(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
+			rt_store_i32(memory_at_0, loc_1 + 104, bit32.band(rt_load_i32(memory_at_0, loc_1 + 104), 4294705151))
 			break
 		end
 		if desired then
@@ -56177,7 +56166,7 @@ FUNC_LIST[624] = function(loc_0)
 					if rt_gt_i32(loc_1, 128) then
 						break
 					end
-					if bit_and(loc_1, 8) == 0 then
+					if bit32.band(loc_1, 8) == 0 then
 						desired = 2
 						break
 					end
@@ -56218,7 +56207,7 @@ FUNC_LIST[624] = function(loc_0)
 					if rt_gt_i32(loc_2, 128) then
 						break
 					end
-					if bit_and(loc_2, 8) == 0 then
+					if bit32.band(loc_2, 8) == 0 then
 						desired = 2
 						break
 					end
@@ -56604,8 +56593,8 @@ FUNC_LIST[629] = function(loc_0)
 				break
 			end
 			loc_1 = GLOBAL_LIST[473].value
-			loc_6 = rt_load_i32(memory_at_0, rt_add_i32(loc_1, bit_and(rt_shr_u32(rt_add_i32(loc_6, 1073741824), 17), 32764)))
-			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_1, bit_and(rt_shr_u32(rt_add_i32(loc_3, 1073741824), 17), 32764)))
+			loc_6 = rt_load_i32(memory_at_0, rt_add_i32(loc_1, bit32.band(rt_shr_u32(rt_add_i32(loc_6, 1073741824), 17), 32764)))
+			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_1, bit32.band(rt_shr_u32(rt_add_i32(loc_3, 1073741824), 17), 32764)))
 			if loc_6 == loc_3 then
 				break
 			end
@@ -56789,7 +56778,7 @@ FUNC_LIST[630] = function(loc_0)
 			if rt_ge_i32(loc_3, loc_1) then
 				break
 			end
-			loc_2 = bit_or((if rt_gt_i32(loc_3, rt_load_i32(memory_at_0, loc_0 + 4)) then 4 else 8), loc_2)
+			loc_2 = bit32.bor((if rt_gt_i32(loc_3, rt_load_i32(memory_at_0, loc_0 + 4)) then 4 else 8), loc_2)
 			if loc_2 ~= 5 then
 				break
 			end
@@ -56879,8 +56868,8 @@ FUNC_LIST[630] = function(loc_0)
 		end
 		while true do
 			loc_0 = GLOBAL_LIST[473].value
-			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, bit_and(rt_shr_u32(rt_add_i32(loc_2, 1073741824), 17), 32764)))
-			loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, bit_and(rt_shr_u32(rt_add_i32(loc_1, 1073741824), 17), 32764)))
+			loc_3 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, bit32.band(rt_shr_u32(rt_add_i32(loc_2, 1073741824), 17), 32764)))
+			loc_0 = rt_load_i32(memory_at_0, rt_add_i32(loc_0, bit32.band(rt_shr_u32(rt_add_i32(loc_1, 1073741824), 17), 32764)))
 			if loc_3 ~= loc_0 then
 				break
 			end
@@ -57044,7 +57033,7 @@ FUNC_LIST[632] = function(loc_0)
 			while true do
 				while true do
 					while true do
-						if bit_and(loc_0, 32768) ~= 0 then
+						if bit32.band(loc_0, 32768) ~= 0 then
 							break
 						end
 						while true do
@@ -57055,14 +57044,14 @@ FUNC_LIST[632] = function(loc_0)
 							reg_1 = FUNC_LIST[660](rt_load_i32(memory_at_0, GLOBAL_LIST[476].value), loc_2, loc_0)
 							loc_1 = reg_1
 							FUNC_LIST[632](rt_load_i32_u16(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(loc_1, 1))))
-							loc_1 = bit_xor(loc_1, 1)
+							loc_1 = bit32.bxor(loc_1, 1)
 							reg_0 = FUNC_LIST[630](rt_add_i32(rt_add_i32(loc_0, rt_shl_i32(loc_1, 4)), 16))
 							if reg_0 == 0 then
 								desired = 1
 								break
 							end
 							loc_1 = rt_load_i32_i16(memory_at_0, rt_add_i32(loc_3, rt_shl_i32(loc_1, 1)))
-							loc_0 = bit_and(loc_1, 65535)
+							loc_0 = bit32.band(loc_1, 65535)
 							if rt_gt_i32(loc_1, 4294967295) then
 								continue
 							end
@@ -57096,7 +57085,7 @@ FUNC_LIST[632] = function(loc_0)
 					end
 					break
 				end
-				loc_0 = bit_and(loc_0, 4294934527)
+				loc_0 = bit32.band(loc_0, 4294934527)
 				break
 			end
 			if desired then
@@ -57125,9 +57114,9 @@ FUNC_LIST[633] = function(loc_0, loc_1, loc_2, loc_3)
 			end
 			while true do
 				while true do
-					loc_4 = rt_add_i32(loc_2, bit_and(loc_4, 255))
+					loc_4 = rt_add_i32(loc_2, bit32.band(loc_4, 255))
 					loc_5 = (if rt_gt_i32(loc_4, 0) then loc_4 else 0)
-					reg_1 = bit_and(rt_shr_i32(loc_4, 31), loc_4)
+					reg_1 = bit32.band(rt_shr_i32(loc_4, 31), loc_4)
 					loc_4 = rt_load_i32_u8(memory_at_0, loc_0 + 1)
 					loc_6 = rt_add_i32(reg_1, loc_4)
 					loc_6 = (if rt_gt_i32(rt_add_i32(loc_6, loc_5), loc_3) then rt_sub_i32(loc_3, loc_5) else loc_6)
@@ -57222,9 +57211,9 @@ FUNC_LIST[634] = function(loc_0)
 							loc_16 = rt_load_i32_i16(memory_at_0, loc_7 + 2)
 							while true do
 								while true do
-									loc_0 = rt_add_i32(bit_and(loc_0, 255), loc_16)
+									loc_0 = rt_add_i32(bit32.band(loc_0, 255), loc_16)
 									loc_5 = (if rt_gt_i32(loc_0, 0) then loc_0 else 0)
-									reg_1 = bit_and(rt_shr_i32(loc_0, 31), loc_0)
+									reg_1 = bit32.band(rt_shr_i32(loc_0, 31), loc_0)
 									loc_0 = rt_load_i32_u8(memory_at_0, loc_2 + 1)
 									loc_17 = rt_add_i32(reg_1, loc_0)
 									loc_17 = (if rt_gt_i32(rt_add_i32(loc_17, loc_5), loc_15) then rt_sub_i32(loc_15, loc_5) else loc_17)
@@ -57485,7 +57474,7 @@ FUNC_LIST[636] = function(loc_0, loc_1)
 	while true do
 		loc_2 = rt_shl_i32(loc_0, 2)
 		loc_3 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[488].value), loc_2))
-		loc_3 = rt_shl_i32(bit_and(loc_3, loc_1), 1)
+		loc_3 = rt_shl_i32(bit32.band(loc_3, loc_1), 1)
 		loc_1 = rt_load_i32_i16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[487].value), loc_2)), loc_3))
 		loc_3 = rt_load_i32_u16(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[486].value), loc_2)), loc_3))
 		while true do
@@ -57727,7 +57716,7 @@ FUNC_LIST[637] = function()
 			loc_12 = loc_5
 			while true do
 				while true do
-					if bit_and(loc_11, 63) ~= 0 then
+					if bit32.band(loc_11, 63) ~= 0 then
 						break
 					end
 					reg_0 = FUNC_LIST[43](46)
@@ -58075,7 +58064,7 @@ FUNC_LIST[639] = function()
 			end
 			while true do
 				while true do
-					if bit_and(loc_0, 63) ~= 0 then
+					if bit32.band(loc_0, 63) ~= 0 then
 						break
 					end
 					reg_0 = FUNC_LIST[43](46)
@@ -58647,7 +58636,7 @@ FUNC_LIST[646] = function()
 			loc_5 = rt_add_i32(rt_mul_i32(rt_sub_i32(loc_5, rt_load_i32(memory_at_0, GLOBAL_LIST[508].value)), loc_6), rt_load_i32(memory_at_0, GLOBAL_LIST[510].value))
 			while true do
 				while true do
-					if bit_and(rt_add_i32(loc_2, loc_1), 1) == 0 then
+					if bit32.band(rt_add_i32(loc_2, loc_1), 1) == 0 then
 						break
 					end
 					loc_1 = loc_3
@@ -58660,7 +58649,7 @@ FUNC_LIST[646] = function()
 					end
 					break
 				end
-				rt_store_i32_n8(memory_at_0, loc_4, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[511].value), bit_and(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, GLOBAL_LIST[512].value))))
+				rt_store_i32_n8(memory_at_0, loc_4, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[511].value), bit32.band(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, GLOBAL_LIST[512].value))))
 				loc_1 = rt_add_i32(loc_3, 4294967295)
 				loc_5 = rt_add_i32(loc_5, loc_6)
 				loc_4 = rt_add_i32(loc_4, 320)
@@ -58678,9 +58667,9 @@ FUNC_LIST[646] = function()
 			while true do
 				loc_2 = GLOBAL_LIST[511].value
 				loc_3 = GLOBAL_LIST[512].value
-				rt_store_i32_n8(memory_at_0, loc_4, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit_and(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, loc_3))))
+				rt_store_i32_n8(memory_at_0, loc_4, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit32.band(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, loc_3))))
 				loc_5 = rt_add_i32(loc_5, loc_6)
-				rt_store_i32_n8(memory_at_0, loc_4 + 320, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit_and(rt_shr_u32(loc_5, 16), 127))))))
+				rt_store_i32_n8(memory_at_0, loc_4 + 320, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit32.band(rt_shr_u32(loc_5, 16), 127))))))
 				loc_4 = rt_add_i32(loc_4, 640)
 				loc_5 = rt_add_i32(loc_5, loc_6)
 				loc_2 = (if loc_1 ~= 1 then 1 else 0)
@@ -58767,7 +58756,7 @@ FUNC_LIST[647] = function()
 			loc_5 = rt_add_i32(rt_mul_i32(rt_sub_i32(loc_5, rt_load_i32(memory_at_0, GLOBAL_LIST[508].value)), loc_7), rt_load_i32(memory_at_0, GLOBAL_LIST[510].value))
 			while true do
 				while true do
-					if bit_and(rt_add_i32(loc_2, loc_1), 1) == 0 then
+					if bit32.band(rt_add_i32(loc_2, loc_1), 1) == 0 then
 						break
 					end
 					loc_1 = loc_3
@@ -58780,7 +58769,7 @@ FUNC_LIST[647] = function()
 					end
 					break
 				end
-				loc_1 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[511].value), bit_and(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, GLOBAL_LIST[512].value)))
+				loc_1 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[511].value), bit32.band(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, GLOBAL_LIST[512].value)))
 				rt_store_i32_n8(memory_at_0, loc_4, loc_1)
 				rt_store_i32_n8(memory_at_0, loc_6, loc_1)
 				loc_1 = rt_add_i32(loc_3, 4294967295)
@@ -58801,11 +58790,11 @@ FUNC_LIST[647] = function()
 			while true do
 				loc_2 = GLOBAL_LIST[511].value
 				loc_3 = GLOBAL_LIST[512].value
-				loc_8 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit_and(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, loc_3)))
+				loc_8 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit32.band(rt_shr_u32(loc_5, 16), 127))), rt_load_i32(memory_at_0, loc_3)))
 				rt_store_i32_n8(memory_at_0, loc_4, loc_8)
 				rt_store_i32_n8(memory_at_0, loc_6, loc_8)
 				loc_5 = rt_add_i32(loc_5, loc_7)
-				loc_2 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit_and(rt_shr_u32(loc_5, 16), 127)))))
+				loc_2 = rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_3), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_2), bit32.band(rt_shr_u32(loc_5, 16), 127)))))
 				rt_store_i32_n8(memory_at_0, loc_4 + 320, loc_2)
 				rt_store_i32_n8(memory_at_0, loc_6 + 320, loc_2)
 				loc_6 = rt_add_i32(loc_6, 640)
@@ -58908,7 +58897,7 @@ FUNC_LIST[648] = function()
 			loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[513].value)
 			while true do
 				while true do
-					if bit_and(rt_add_i32(loc_3, loc_1), 1) == 0 then
+					if bit32.band(rt_add_i32(loc_3, loc_1), 1) == 0 then
 						break
 					end
 					loc_3 = loc_4
@@ -59143,7 +59132,7 @@ FUNC_LIST[650] = function()
 			loc_5 = rt_add_i32(rt_mul_i32(rt_sub_i32(loc_5, rt_load_i32(memory_at_0, GLOBAL_LIST[508].value)), loc_6), rt_load_i32(memory_at_0, GLOBAL_LIST[510].value))
 			while true do
 				while true do
-					if bit_and(rt_add_i32(loc_2, loc_1), 1) == 0 then
+					if bit32.band(rt_add_i32(loc_2, loc_1), 1) == 0 then
 						break
 					end
 					loc_1 = loc_3
@@ -59305,14 +59294,14 @@ FUNC_LIST[652] = function()
 		while true do
 			while true do
 				while true do
-					if bit_and(loc_0, 240) ~= 112 then
+					if bit32.band(loc_0, 240) ~= 112 then
 						break
 					end
 					loc_1 = GLOBAL_LIST[516].value
-					loc_2 = bit_and(loc_0, 15)
-					rt_store_i32_n8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_0), bit_or(loc_2, 96))
-					rt_store_i32_n8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_0) + 256, bit_or(loc_2, 64))
-					rt_store_i32_n8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_0) + 512, bit_or(loc_2, 32))
+					loc_2 = bit32.band(loc_0, 15)
+					rt_store_i32_n8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_0), bit32.bor(loc_2, 96))
+					rt_store_i32_n8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_0) + 256, bit32.bor(loc_2, 64))
+					rt_store_i32_n8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_0) + 512, bit32.bor(loc_2, 32))
 					desired = 2
 					break
 				end
@@ -59395,15 +59384,15 @@ FUNC_LIST[653] = function()
 		end
 		loc_2 = rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[506].value, rt_shl_i32(loc_3, 2))), rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[507].value, rt_shl_i32(loc_2, 2))))
 		loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[520].value)
-		loc_5 = bit_or(bit_and(rt_shr_u32(rt_load_i32(memory_at_0, GLOBAL_LIST[521].value), 6), 65535), bit_and(rt_shl_i32(loc_4, 10), 4294901760))
+		loc_5 = bit32.bor(bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, GLOBAL_LIST[521].value), 6), 65535), bit32.band(rt_shl_i32(loc_4, 10), 4294901760))
 		loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[522].value)
 		loc_6 = rt_load_i32(memory_at_0, GLOBAL_LIST[523].value)
 		loc_7 = rt_shl_i32(loc_4, 10)
-		loc_4 = bit_or(bit_and(rt_shr_u32(loc_6, 6), 65535), bit_and(loc_7, 4294901760))
+		loc_4 = bit32.bor(bit32.band(rt_shr_u32(loc_6, 6), 65535), bit32.band(loc_7, 4294901760))
 		loc_8 = rt_sub_i32(loc_1, loc_3)
 		while true do
 			while true do
-				if bit_and(rt_add_i32(loc_1, loc_3), 1) == 0 then
+				if bit32.band(rt_add_i32(loc_1, loc_3), 1) == 0 then
 					break
 				end
 				loc_3 = loc_8
@@ -59416,7 +59405,7 @@ FUNC_LIST[653] = function()
 				end
 				break
 			end
-			rt_store_i32_n8(memory_at_0, loc_2, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[524].value), rt_shr_u32(loc_7, 26)), bit_and(rt_shr_u32(loc_6, 10), 4032))), rt_load_i32(memory_at_0, GLOBAL_LIST[525].value))))
+			rt_store_i32_n8(memory_at_0, loc_2, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[524].value), rt_shr_u32(loc_7, 26)), bit32.band(rt_shr_u32(loc_6, 10), 4032))), rt_load_i32(memory_at_0, GLOBAL_LIST[525].value))))
 			loc_3 = rt_add_i32(loc_8, 4294967295)
 			loc_4 = rt_add_i32(loc_5, loc_4)
 			loc_2 = rt_add_i32(loc_2, 1)
@@ -59429,9 +59418,9 @@ FUNC_LIST[653] = function()
 			while true do
 				loc_1 = GLOBAL_LIST[524].value
 				loc_8 = GLOBAL_LIST[525].value
-				rt_store_i32_n8(memory_at_0, loc_2, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, loc_1), rt_shr_u32(loc_4, 26)), bit_and(rt_shr_u32(loc_4, 4), 4032))), rt_load_i32(memory_at_0, loc_8))))
+				rt_store_i32_n8(memory_at_0, loc_2, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, loc_1), rt_shr_u32(loc_4, 26)), bit32.band(rt_shr_u32(loc_4, 4), 4032))), rt_load_i32(memory_at_0, loc_8))))
 				loc_4 = rt_add_i32(loc_5, loc_4)
-				rt_store_i32_n8(memory_at_0, loc_2 + 1, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_8), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, loc_1), rt_shr_u32(loc_4, 26)), bit_and(rt_shr_u32(loc_4, 4), 4032))))))
+				rt_store_i32_n8(memory_at_0, loc_2 + 1, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_8), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, loc_1), rt_shr_u32(loc_4, 26)), bit32.band(rt_shr_u32(loc_4, 4), 4032))))))
 				loc_2 = rt_add_i32(loc_2, 2)
 				loc_4 = rt_add_i32(loc_5, loc_4)
 				loc_1 = (if loc_3 ~= 1 then 1 else 0)
@@ -59505,13 +59494,13 @@ FUNC_LIST[654] = function()
 		rt_store_i32(memory_at_0, GLOBAL_LIST[517].value, rt_shl_i32(loc_1, 1))
 		loc_2 = rt_add_i32(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[506].value, rt_shl_i32(loc_3, 3))), rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[507].value, rt_shl_i32(loc_2, 2))))
 		loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[520].value)
-		loc_5 = bit_or(bit_and(rt_shr_u32(rt_load_i32(memory_at_0, GLOBAL_LIST[521].value), 6), 65535), bit_and(rt_shl_i32(loc_4, 10), 4294901760))
+		loc_5 = bit32.bor(bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, GLOBAL_LIST[521].value), 6), 65535), bit32.band(rt_shl_i32(loc_4, 10), 4294901760))
 		loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[522].value)
-		loc_4 = bit_or(bit_and(rt_shr_u32(rt_load_i32(memory_at_0, GLOBAL_LIST[523].value), 6), 65535), bit_and(rt_shl_i32(loc_4, 10), 4294901760))
+		loc_4 = bit32.bor(bit32.band(rt_shr_u32(rt_load_i32(memory_at_0, GLOBAL_LIST[523].value), 6), 65535), bit32.band(rt_shl_i32(loc_4, 10), 4294901760))
 		loc_3 = rt_sub_i32(loc_1, loc_3)
 		while true do
 			loc_1 = GLOBAL_LIST[524].value
-			loc_6 = bit_or(bit_and(rt_shr_u32(loc_4, 4), 4032), rt_shr_u32(loc_4, 26))
+			loc_6 = bit32.bor(bit32.band(rt_shr_u32(loc_4, 4), 4032), rt_shr_u32(loc_4, 26))
 			loc_7 = GLOBAL_LIST[525].value
 			rt_store_i32_n8(memory_at_0, loc_2, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_6)), rt_load_i32(memory_at_0, loc_7))))
 			rt_store_i32_n8(memory_at_0, loc_2 + 1, rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_7), rt_load_i32_u8(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, loc_1), loc_6)))))
@@ -59545,24 +59534,24 @@ FUNC_LIST[655] = function(loc_0, loc_1)
 			if rt_lt_i32(loc_0, 1) then
 				break
 			end
-			loc_3 = bit_and(loc_0, 3)
+			loc_3 = bit32.band(loc_0, 3)
 			loc_4 = 0
 			loc_5 = 0
 			while true do
 				if loc_0 < 4 then
 					break
 				end
-				loc_6 = bit_and(loc_0, 2147483644)
+				loc_6 = bit32.band(loc_0, 2147483644)
 				loc_5 = 0
 				loc_7 = 0
 				while true do
 					loc_8 = GLOBAL_LIST[506].value
 					rt_store_i32(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(loc_5, 2)), rt_add_i32(loc_5, loc_2))
-					loc_9 = bit_or(loc_5, 1)
+					loc_9 = bit32.bor(loc_5, 1)
 					rt_store_i32(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(loc_9, 2)), rt_add_i32(loc_9, loc_2))
-					loc_9 = bit_or(loc_5, 2)
+					loc_9 = bit32.bor(loc_5, 2)
 					rt_store_i32(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(loc_9, 2)), rt_add_i32(loc_9, loc_2))
-					loc_9 = bit_or(loc_5, 3)
+					loc_9 = bit32.bor(loc_5, 3)
 					rt_store_i32(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(loc_9, 2)), rt_add_i32(loc_9, loc_2))
 					loc_5 = rt_add_i32(loc_5, 4)
 					loc_7 = rt_add_i32(loc_7, 4)
@@ -59613,23 +59602,23 @@ FUNC_LIST[655] = function(loc_0, loc_1)
 			if rt_lt_i32(loc_1, 1) then
 				break
 			end
-			loc_3 = bit_and(loc_1, 3)
+			loc_3 = bit32.band(loc_1, 3)
 			loc_8 = rt_load_i32(memory_at_0, GLOBAL_LIST[12].value)
 			while true do
 				if loc_1 < 4 then
 					break
 				end
-				loc_6 = bit_and(loc_1, 2147483644)
+				loc_6 = bit32.band(loc_1, 2147483644)
 				loc_5 = 0
 				loc_7 = 0
 				while true do
 					loc_4 = GLOBAL_LIST[507].value
 					rt_store_i32(memory_at_0, rt_add_i32(loc_4, rt_shl_i32(loc_5, 2)), rt_add_i32(loc_8, rt_mul_i32(rt_add_i32(loc_5, loc_2), 320)))
-					loc_9 = bit_or(loc_5, 1)
+					loc_9 = bit32.bor(loc_5, 1)
 					rt_store_i32(memory_at_0, rt_add_i32(loc_4, rt_shl_i32(loc_9, 2)), rt_add_i32(loc_8, rt_mul_i32(rt_add_i32(loc_9, loc_2), 320)))
-					loc_9 = bit_or(loc_5, 2)
+					loc_9 = bit32.bor(loc_5, 2)
 					rt_store_i32(memory_at_0, rt_add_i32(loc_4, rt_shl_i32(loc_9, 2)), rt_add_i32(loc_8, rt_mul_i32(rt_add_i32(loc_9, loc_2), 320)))
-					loc_9 = bit_or(loc_5, 3)
+					loc_9 = bit32.bor(loc_5, 3)
 					rt_store_i32(memory_at_0, rt_add_i32(loc_4, rt_shl_i32(loc_9, 2)), rt_add_i32(loc_8, rt_mul_i32(rt_add_i32(loc_9, loc_2), 320)))
 					loc_5 = rt_add_i32(loc_5, 4)
 					loc_7 = rt_add_i32(loc_7, 4)
@@ -59733,7 +59722,7 @@ FUNC_LIST[656] = function()
 			loc_4 = rt_load_i32(memory_at_0, rt_add_i32(loc_1, 16166864))
 			loc_1 = loc_4
 			while true do
-				loc_0 = rt_add_i32(loc_2, bit_and(rt_shl_i32(loc_3, 6), 4032))
+				loc_0 = rt_add_i32(loc_2, bit32.band(rt_shl_i32(loc_3, 6), 4032))
 				rt_store_i64(memory_at_0, loc_1 + 56, rt_load_i64(memory_at_0, loc_0 + 56))
 				rt_store_i64(memory_at_0, loc_1 + 48, rt_load_i64(memory_at_0, loc_0 + 48))
 				rt_store_i64(memory_at_0, loc_1 + 40, rt_load_i64(memory_at_0, loc_0 + 40))
@@ -60144,10 +60133,10 @@ FUNC_LIST[660] = function(loc_0, loc_1, loc_2)
 		while true do
 			loc_0 = rt_sub_i32(loc_0, rt_load_i32(memory_at_0, loc_2))
 			loc_1 = rt_sub_i32(loc_1, rt_load_i32(memory_at_0, loc_2 + 4))
-			if rt_gt_i32(bit_xor(bit_xor(bit_xor(loc_4, loc_3), loc_0), loc_1), 4294967295) then
+			if rt_gt_i32(bit32.bxor(bit32.bxor(bit32.bxor(loc_4, loc_3), loc_0), loc_1), 4294967295) then
 				break
 			end
-			reg_0 = rt_shr_u32(bit_xor(loc_0, loc_4), 31)
+			reg_0 = rt_shr_u32(bit32.bxor(loc_0, loc_4), 31)
 			desired = 0
 			break
 		end
@@ -60240,10 +60229,10 @@ FUNC_LIST[661] = function(loc_0, loc_1, loc_2)
 		while true do
 			loc_5 = rt_sub_i32(loc_1, loc_5)
 			loc_2 = rt_sub_i32(loc_0, loc_2)
-			if rt_gt_i32(bit_xor(bit_xor(bit_xor(loc_5, loc_2), loc_3), loc_6), 4294967295) then
+			if rt_gt_i32(bit32.bxor(bit32.bxor(bit32.bxor(loc_5, loc_2), loc_3), loc_6), 4294967295) then
 				break
 			end
-			reg_0 = rt_shr_u32(bit_xor(loc_6, loc_2), 31)
+			reg_0 = rt_shr_u32(bit32.bxor(loc_6, loc_2), 31)
 			desired = 0
 			break
 		end
@@ -60366,7 +60355,7 @@ FUNC_LIST[662] = function(loc_0, loc_1)
 					end
 					reg_0 = FUNC_LIST[739](loc_1, loc_2)
 					loc_0 = reg_0
-					reg_0 = bit_xor(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[526].value, rt_shl_i32(loc_0, 2))), 2147483647)
+					reg_0 = bit32.bxor(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[526].value, rt_shl_i32(loc_0, 2))), 2147483647)
 					desired = 0
 					break
 				end
@@ -60395,7 +60384,7 @@ FUNC_LIST[662] = function(loc_0, loc_1)
 				end
 				reg_0 = FUNC_LIST[739](loc_3, loc_2)
 				loc_0 = reg_0
-				reg_0 = bit_xor(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[526].value, rt_shl_i32(loc_0, 2))), 2147483648)
+				reg_0 = bit32.bxor(rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[526].value, rt_shl_i32(loc_0, 2))), 2147483648)
 				desired = 0
 				break
 			end
@@ -60443,11 +60432,11 @@ FUNC_LIST[664] = function(loc_0, loc_1)
 				loc_1 = rt_sub_i32(loc_1, rt_load_i32(memory_at_0, GLOBAL_LIST[477].value))
 				reg_0 = loc_1
 				loc_1 = rt_shr_i32(loc_1, 31)
-				loc_1 = rt_sub_i32(bit_xor(reg_0, loc_1), loc_1)
+				loc_1 = rt_sub_i32(bit32.bxor(reg_0, loc_1), loc_1)
 				loc_0 = rt_sub_i32(loc_0, loc_2)
 				reg_1 = loc_0
 				loc_0 = rt_shr_i32(loc_0, 31)
-				loc_0 = rt_sub_i32(bit_xor(reg_1, loc_0), loc_0)
+				loc_0 = rt_sub_i32(bit32.bxor(reg_1, loc_0), loc_0)
 				loc_2 = (if loc_1 > loc_0 then loc_1 else loc_0)
 				if loc_2 ~= 0 then
 					break
@@ -60467,7 +60456,7 @@ FUNC_LIST[664] = function(loc_0, loc_1)
 			break
 		end
 		loc_1 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[526].value, rt_shl_i32(loc_1, 2)))
-		reg_0 = FUNC_LIST[315](loc_2, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, bit_and(rt_shr_u32(rt_add_i32(loc_1, 1073741824), 17), 32764))))
+		reg_0 = FUNC_LIST[315](loc_2, rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, bit32.band(rt_shr_u32(rt_add_i32(loc_1, 1073741824), 17), 32764))))
 		break
 	end
 	return reg_0
@@ -60488,14 +60477,14 @@ FUNC_LIST[666] = function(loc_0)
 		loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[527].value)
 		loc_2 = GLOBAL_LIST[38].value
 		loc_0 = rt_add_i32(loc_0, 1073741824)
-		loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, bit_and(rt_shr_u32(rt_sub_i32(loc_0, loc_1), 17), 32764)))
+		loc_1 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, bit32.band(rt_shr_u32(rt_sub_i32(loc_0, loc_1), 17), 32764)))
 		loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[472].value)
 		loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[528].value)
 		loc_5 = GLOBAL_LIST[529].value
 		reg_0 = FUNC_LIST[314](loc_4, loc_1)
 		loc_1 = reg_0
 		loc_4 = rt_load_i32(memory_at_0, loc_5)
-		loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, bit_and(rt_shr_u32(rt_sub_i32(loc_0, loc_3), 17), 32764)))
+		loc_2 = rt_load_i32(memory_at_0, rt_add_i32(loc_2, bit32.band(rt_shr_u32(rt_sub_i32(loc_0, loc_3), 17), 32764)))
 		loc_0 = 4194304
 		while true do
 			reg_0 = FUNC_LIST[314](rt_load_i32(memory_at_0, GLOBAL_LIST[530].value), loc_2)
@@ -60593,7 +60582,7 @@ FUNC_LIST[668] = function()
 				if loc_6 == 0 then
 					break
 				end
-				loc_7 = bit_and(rt_add_i32(loc_6, 1), 4294967294)
+				loc_7 = bit32.band(rt_add_i32(loc_6, 1), 4294967294)
 				loc_3 = 0
 				loc_5 = 0
 				while true do
@@ -60614,7 +60603,7 @@ FUNC_LIST[668] = function()
 						break
 					end
 					rt_store_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[532].value, rt_shl_i32(loc_3, 2)), rt_add_i32(rt_shl_i32(loc_2, 19), 3221225472))
-					loc_4 = bit_or(loc_3, 1)
+					loc_4 = bit32.bor(loc_3, 1)
 					loc_0 = 0
 					while true do
 						loc_2 = loc_0
@@ -60645,7 +60634,7 @@ FUNC_LIST[668] = function()
 					end
 					break
 				end
-				if bit_and(loc_6, 1) ~= 0 then
+				if bit32.band(loc_6, 1) ~= 0 then
 					desired = 1
 					break
 				end
@@ -60789,7 +60778,7 @@ FUNC_LIST[671] = function()
 				break
 			end
 			loc_1 = rt_shl_i32(loc_2, 5)
-			loc_0 = bit_and(rt_div_i32(rt_mul_i32(loc_2, 168), 10), 4294967288)
+			loc_0 = bit32.band(rt_div_i32(rt_mul_i32(loc_2, 168), 10), 4294967288)
 			break
 		end
 		loc_3 = GLOBAL_LIST[53].value
@@ -60831,14 +60820,14 @@ FUNC_LIST[671] = function()
 			if rt_lt_i32(loc_4, 1) then
 				break
 			end
-			loc_6 = bit_and(loc_4, 7)
+			loc_6 = bit32.band(loc_4, 7)
 			loc_3 = 0
 			loc_1 = 0
 			while true do
 				if loc_4 < 8 then
 					break
 				end
-				loc_7 = bit_and(loc_4, 2147483640)
+				loc_7 = bit32.band(loc_4, 2147483640)
 				loc_1 = 0
 				loc_5 = 0
 				while true do
@@ -60902,9 +60891,9 @@ FUNC_LIST[671] = function()
 				loc_1 = GLOBAL_LIST[554].value
 				loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[529].value)
 				loc_2 = rt_shl_i32(rt_add_i32(rt_div_i32(loc_2, 4294967294), loc_0), 16)
-				reg_2 = bit_or(loc_2, 32768)
+				reg_2 = bit32.bor(loc_2, 32768)
 				loc_2 = rt_shr_i32(loc_2, 31)
-				reg_1 = FUNC_LIST[315](rt_shl_i32(rt_div_i32(rt_shl_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[231].value), loc_3), 2), 16), rt_sub_i32(bit_xor(reg_2, loc_2), loc_2))
+				reg_1 = FUNC_LIST[315](rt_shl_i32(rt_div_i32(rt_shl_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[231].value), loc_3), 2), 16), rt_sub_i32(bit32.bxor(reg_2, loc_2), loc_2))
 				rt_store_i32(memory_at_0, rt_add_i32(loc_1, rt_shl_i32(loc_0, 2)), reg_1)
 				loc_0 = rt_add_i32(loc_0, 1)
 				loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[53].value)
@@ -60930,10 +60919,10 @@ FUNC_LIST[671] = function()
 			while true do
 				loc_1 = rt_shl_i32(loc_2, 2)
 				loc_0 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[532].value, loc_1))
-				loc_0 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), bit_and(rt_shr_u32(loc_0, 17), 32764)))
+				loc_0 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), bit32.band(rt_shr_u32(loc_0, 17), 32764)))
 				reg_0 = rt_add_i32(GLOBAL_LIST[555].value, loc_1)
 				loc_1 = rt_shr_i32(loc_0, 31)
-				reg_1 = FUNC_LIST[315](65536, rt_sub_i32(bit_xor(loc_0, loc_1), loc_1))
+				reg_1 = FUNC_LIST[315](65536, rt_sub_i32(bit32.bxor(loc_0, loc_1), loc_1))
 				rt_store_i32(memory_at_0, reg_0, reg_1)
 				loc_2 = rt_add_i32(loc_2, 1)
 				loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[231].value)
@@ -61062,7 +61051,7 @@ FUNC_LIST[673] = function(loc_0, loc_1)
 		end
 		while true do
 			loc_2 = rt_add_i32(loc_2, 4294967295)
-			if bit_and(loc_2, 32768) ~= 0 then
+			if bit32.band(loc_2, 32768) ~= 0 then
 				break
 			end
 			loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[441].value)
@@ -61129,13 +61118,13 @@ FUNC_LIST[673] = function(loc_0, loc_1)
 						break
 					end
 					while true do
-						reg_0 = bit_xor(loc_5, loc_4)
+						reg_0 = bit32.bxor(loc_5, loc_4)
 						loc_4 = rt_sub_i32(loc_0, rt_load_i32(memory_at_0, loc_2))
 						loc_6 = rt_sub_i32(loc_1, rt_load_i32(memory_at_0, loc_2 + 4))
-						if rt_gt_i32(bit_xor(bit_xor(reg_0, loc_4), loc_6), 4294967295) then
+						if rt_gt_i32(bit32.bxor(bit32.bxor(reg_0, loc_4), loc_6), 4294967295) then
 							break
 						end
-						loc_4 = rt_shr_u32(bit_xor(loc_4, loc_5), 31)
+						loc_4 = rt_shr_u32(bit32.bxor(loc_4, loc_5), 31)
 						desired = 3
 						break
 					end
@@ -61160,7 +61149,7 @@ FUNC_LIST[673] = function(loc_0, loc_1)
 					break
 				end
 				loc_4 = rt_load_i32_i16(memory_at_0, rt_add_i32(loc_2, rt_shl_i32(loc_4, 1)) + 48)
-				loc_2 = bit_and(loc_4, 65535)
+				loc_2 = bit32.band(loc_4, 65535)
 				if rt_gt_i32(loc_4, 4294967295) then
 					continue
 				end
@@ -61180,7 +61169,7 @@ FUNC_LIST[673] = function(loc_0, loc_1)
 			end
 			break
 		end
-		reg_0 = rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[439].value), rt_shl_i32(bit_and(loc_2, 536838143), 3))
+		reg_0 = rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[439].value), rt_shl_i32(bit32.band(loc_2, 536838143), 3))
 		break
 	end
 	return reg_0
@@ -61204,7 +61193,7 @@ FUNC_LIST[674] = function(loc_0)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[559].value, loc_2)
 		loc_2 = rt_load_i32(memory_at_0, loc_0 + 24)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[480].value, loc_2)
-		loc_1 = bit_and(rt_shr_u32(loc_1, 17), 32764)
+		loc_1 = bit32.band(rt_shr_u32(loc_1, 17), 32764)
 		loc_2 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, loc_1))
 		rt_store_i32(memory_at_0, GLOBAL_LIST[560].value, loc_2)
 		loc_1 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1))
@@ -61399,7 +61388,7 @@ FUNC_LIST[677] = function(loc_0, loc_1, loc_2)
 		loc_5 = reg_0
 		loc_6 = rt_load_i32(memory_at_0, rt_add_i32(loc_6, loc_7))
 		loc_7 = rt_load_i32(memory_at_0, GLOBAL_LIST[472].value)
-		loc_6 = bit_and(rt_shr_u32(rt_add_i32(loc_6, loc_7), 17), 32764)
+		loc_6 = bit32.band(rt_shr_u32(rt_add_i32(loc_6, loc_7), 17), 32764)
 		loc_7 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_6))
 		loc_8 = rt_load_i32(memory_at_0, GLOBAL_LIST[476].value)
 		reg_0 = FUNC_LIST[314](loc_7, loc_5)
@@ -61461,14 +61450,14 @@ FUNC_LIST[678] = function()
 				end
 				break
 			end
-			loc_4 = bit_and(loc_0, 7)
+			loc_4 = bit32.band(loc_0, 7)
 			loc_3 = 0
 			loc_2 = 0
 			while true do
 				if loc_0 < 8 then
 					break
 				end
-				loc_5 = bit_and(loc_0, 2147483640)
+				loc_5 = bit32.band(loc_0, 2147483640)
 				loc_2 = 0
 				loc_6 = 0
 				while true do
@@ -61529,7 +61518,7 @@ FUNC_LIST[678] = function()
 		rt_store_i32(memory_at_0, GLOBAL_LIST[578].value, loc_1)
 		rt_store_fill(memory_at_0, GLOBAL_LIST[565].value, 800, 0)
 		loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[472].value)
-		loc_1 = bit_and(rt_shr_u32(rt_add_i32(loc_1, 3221225472), 17), 32764)
+		loc_1 = bit32.band(rt_shr_u32(rt_add_i32(loc_1, 3221225472), 17), 32764)
 		loc_0 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[39].value), loc_1))
 		loc_2 = GLOBAL_LIST[531].value
 		loc_3 = rt_load_i32(memory_at_0, loc_2)
@@ -62003,7 +61992,7 @@ FUNC_LIST[682] = function()
 					loc_1 = rt_sub_i32(loc_4, loc_1)
 					reg_1 = loc_1
 					loc_1 = rt_shr_i32(loc_1, 31)
-					rt_store_i32(memory_at_0, GLOBAL_LIST[566].value, rt_sub_i32(bit_xor(reg_1, loc_1), loc_1))
+					rt_store_i32(memory_at_0, GLOBAL_LIST[566].value, rt_sub_i32(bit32.bxor(reg_1, loc_1), loc_1))
 					loc_1 = rt_load_i32(memory_at_0, loc_2 + 8)
 					loc_4 = rt_load_i32(memory_at_0, GLOBAL_LIST[559].value)
 					loc_5 = GLOBAL_LIST[533].value
@@ -62295,7 +62284,7 @@ FUNC_LIST[683] = function(loc_0, loc_1, loc_2)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[585].value, loc_0)
 		while true do
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_3 + 20) + 16), 16) == 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_3 + 20) + 16), 16) == 0 then
 					break
 				end
 				loc_0 = rt_load_i32(memory_at_0, loc_5)
@@ -62503,7 +62492,7 @@ FUNC_LIST[684] = function()
 					loc_1 = rt_load_i32(memory_at_0, loc_2)
 					loc_1 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[532].value, rt_shl_i32(loc_1, 2)))
 					loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[594].value)
-					loc_1 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[228].value, bit_and(rt_shr_u32(rt_add_i32(loc_1, loc_3), 17), 32764)))
+					loc_1 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[228].value, bit32.band(rt_shr_u32(rt_add_i32(loc_1, loc_3), 17), 32764)))
 					loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[595].value)
 					loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[530].value)
 					loc_6 = GLOBAL_LIST[596].value
@@ -62792,15 +62781,15 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 			rt_store_i32(memory_at_0, GLOBAL_LIST[610].value, loc_5)
 			loc_5 = rt_load_i32(memory_at_0, loc_3 + 20)
 			rt_store_i32(memory_at_0, GLOBAL_LIST[611].value, loc_5)
-			rt_store_i32_n16(memory_at_0, loc_5 + 16, bit_or(rt_load_i32_u16(memory_at_0, loc_5 + 16), 256))
+			rt_store_i32_n16(memory_at_0, loc_5 + 16, bit32.bor(rt_load_i32_u16(memory_at_0, loc_5 + 16), 256))
 			loc_5 = rt_load_i32(memory_at_0, loc_3 + 12)
 			loc_5 = rt_add_i32(loc_5, 1073741824)
 			rt_store_i32(memory_at_0, GLOBAL_LIST[527].value, loc_5)
 			loc_6 = rt_load_i32(memory_at_0, GLOBAL_LIST[470].value)
 			loc_5 = rt_sub_i32(loc_5, loc_6)
 			loc_6 = rt_shr_i32(loc_5, 31)
-			loc_5 = rt_add_i32(rt_sub_i32(loc_6, bit_xor(loc_5, loc_6)), 1073741824)
-			loc_5 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, bit_and(rt_shr_u32((if loc_5 > 1073741824 then 0 else loc_5), 17), 16380)))
+			loc_5 = rt_add_i32(rt_sub_i32(loc_6, bit32.bxor(loc_5, loc_6)), 1073741824)
+			loc_5 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, bit32.band(rt_shr_u32((if loc_5 > 1073741824 then 0 else loc_5), 17), 16380)))
 			loc_3 = rt_load_i32(memory_at_0, loc_3)
 			loc_6 = rt_load_i32(memory_at_0, loc_3 + 4)
 			loc_3 = rt_load_i32(memory_at_0, loc_3)
@@ -62885,7 +62874,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					rt_store_i32(memory_at_0, GLOBAL_LIST[590].value, 1)
 					rt_store_i32(memory_at_0, GLOBAL_LIST[592].value, 1)
 					while true do
-						if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[611].value) + 16), 16) == 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[611].value) + 16), 16) == 0 then
 							break
 						end
 						loc_7 = rt_add_i32(rt_sub_i32(rt_load_i32(memory_at_0, loc_1), loc_5), rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[371].value), loc_9)))
@@ -62970,7 +62959,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 						break
 					end
 					rt_store_i32(memory_at_0, loc_3 + 32, loc_14)
-					loc_13 = bit_or(loc_13, 2)
+					loc_13 = bit32.bor(loc_13, 2)
 					rt_store_i32(memory_at_0, loc_3 + 24, loc_13)
 					break
 				end
@@ -62986,7 +62975,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					end
 					rt_store_i32(memory_at_0, loc_3 + 28, 2147483647)
 					rt_store_i32(memory_at_0, loc_3 + 40, GLOBAL_LIST[614].value)
-					loc_13 = bit_or(loc_13, 1)
+					loc_13 = bit32.bor(loc_13, 1)
 					rt_store_i32(memory_at_0, loc_3 + 24, loc_13)
 					break
 				end
@@ -63002,7 +62991,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					end
 					rt_store_i32(memory_at_0, loc_3 + 32, 2147483648)
 					rt_store_i32(memory_at_0, loc_3 + 36, GLOBAL_LIST[553].value)
-					rt_store_i32(memory_at_0, loc_3 + 24, bit_or(loc_13, 2))
+					rt_store_i32(memory_at_0, loc_3 + 24, bit32.bor(loc_13, 2))
 					break
 				end
 				if desired then
@@ -63021,7 +63010,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					if rt_load_i32(memory_at_0, GLOBAL_LIST[181].value) ~= loc_14 then
 						break
 					end
-					if bit_and(loc_14, 65535) ~= rt_load_i32_u16(memory_at_0, loc_4 + 10) then
+					if bit32.band(loc_14, 65535) ~= rt_load_i32_u16(memory_at_0, loc_4 + 10) then
 						break
 					end
 					rt_store_i32(memory_at_0, GLOBAL_LIST[612].value, loc_10)
@@ -63058,7 +63047,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					if loc_10 ~= loc_7 then
 						break
 					end
-					if rt_load_i32_u16(memory_at_0, loc_4 + 10) ~= bit_and(loc_14, 65535) then
+					if rt_load_i32_u16(memory_at_0, loc_4 + 10) ~= bit32.band(loc_14, 65535) then
 						break
 					end
 					loc_12 = (if rt_load_i32_u16(memory_at_0, loc_4 + 12) ~= rt_load_i32_u16(memory_at_0, loc_1 + 12) then 1 else 0)
@@ -63110,7 +63099,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					rt_store_i32(memory_at_0, GLOBAL_LIST[599].value, loc_4)
 					loc_6 = loc_7
 					while true do
-						if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[611].value) + 16), 8) ~= 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[611].value) + 16), 8) ~= 0 then
 							break
 						end
 						loc_6 = rt_add_i32(loc_10, rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[371].value), loc_11)))
@@ -63150,7 +63139,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					loc_6 = rt_load_i32_i16(memory_at_0, loc_5 + 10)
 					loc_6 = rt_load_i32(memory_at_0, rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[455].value), rt_shl_i32(loc_6, 2)))
 					rt_store_i32(memory_at_0, GLOBAL_LIST[603].value, loc_6)
-					loc_9 = (if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[611].value) + 16), 16) ~= 0 then loc_7 else loc_15)
+					loc_9 = (if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[611].value) + 16), 16) ~= 0 then loc_7 else loc_15)
 					break
 				end
 				if desired then
@@ -63194,7 +63183,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 				end
 				break
 			end
-			loc_3 = bit_or(bit_or(loc_4, loc_6), loc_5)
+			loc_3 = bit32.bor(bit32.bor(loc_4, loc_6), loc_5)
 			rt_store_i32(memory_at_0, GLOBAL_LIST[593].value, loc_3)
 			while true do
 				if loc_3 == 0 then
@@ -63206,7 +63195,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 				loc_4 = rt_load_i32(memory_at_0, loc_5)
 				loc_3 = rt_sub_i32(loc_4, loc_3)
 				loc_3 = (if loc_3 > 2147483648 then rt_sub_i32(0, loc_3) else loc_3)
-				loc_3 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, bit_and(rt_shr_u32((if loc_3 < 1073741824 then loc_3 else 1073741824), 17), 16380)))
+				loc_3 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[38].value, bit32.band(rt_shr_u32((if loc_3 < 1073741824 then loc_3 else 1073741824), 17), 16380)))
 				reg_0 = GLOBAL_LIST[595].value
 				reg_1 = FUNC_LIST[314](loc_8, loc_3)
 				loc_3 = reg_1
@@ -63436,7 +63425,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[466].value)
 					loc_5 = rt_load_i32(memory_at_0, loc_3 + 24)
 					loc_1 = rt_load_i32(memory_at_0, GLOBAL_LIST[607].value)
-					if bit_or(bit_and(loc_5, 2), loc_1) ~= 0 then
+					if bit32.bor(bit32.band(loc_5, 2), loc_1) ~= 0 then
 						break
 					end
 					loc_1 = 0
@@ -63487,7 +63476,7 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 			end
 			while true do
 				while true do
-					if bit_and(loc_5, 1) ~= 0 then
+					if bit32.band(loc_5, 1) ~= 0 then
 						break
 					end
 					if loc_1 == 0 then
@@ -63543,11 +63532,11 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 				end
 				while true do
 					loc_0 = rt_load_i32(memory_at_0, loc_3 + 24)
-					if bit_and(loc_0, 2) ~= 0 then
+					if bit32.band(loc_0, 2) ~= 0 then
 						break
 					end
 					rt_store_i32(memory_at_0, loc_3 + 32, 2147483648)
-					loc_0 = bit_or(loc_0, 2)
+					loc_0 = bit32.bor(loc_0, 2)
 					rt_store_i32(memory_at_0, loc_3 + 24, loc_0)
 					break
 				end
@@ -63557,11 +63546,11 @@ FUNC_LIST[685] = function(loc_0, loc_1)
 					end
 					break
 				end
-				if bit_and(loc_0, 1) ~= 0 then
+				if bit32.band(loc_0, 1) ~= 0 then
 					break
 				end
 				rt_store_i32(memory_at_0, loc_3 + 28, 2147483647)
-				rt_store_i32(memory_at_0, loc_3 + 24, bit_or(loc_0, 1))
+				rt_store_i32(memory_at_0, loc_3 + 24, bit32.bor(loc_0, 1))
 				break
 			end
 			if desired then
@@ -64440,7 +64429,7 @@ FUNC_LIST[692] = function(loc_0)
 			loc_6 = rt_load_i32(memory_at_0, GLOBAL_LIST[586].value)
 			while true do
 				loc_7 = rt_load_i32_u8(memory_at_0, loc_0 + 1)
-				loc_8 = bit_and(loc_1, 255)
+				loc_8 = bit32.band(loc_1, 255)
 				loc_9 = rt_add_i32(rt_mul_i32(loc_5, loc_8), loc_6)
 				loc_1 = rt_shr_i32(rt_add_i32(loc_9, 65535), 16)
 				rt_store_i32(memory_at_0, GLOBAL_LIST[503].value, loc_1)
@@ -64533,19 +64522,19 @@ FUNC_LIST[693] = function(loc_0, loc_1, loc_2)
 				break
 			end
 			loc_4 = rt_load_i32(memory_at_0, loc_0 + 56)
-			if bit_and(loc_4, 201326592) == 0 then
+			if bit32.band(loc_4, 201326592) == 0 then
 				break
 			end
 			loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[546].value)
 			rt_store_i32(memory_at_0, GLOBAL_LIST[540].value, loc_5)
 			loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[516].value)
-			rt_store_i32(memory_at_0, GLOBAL_LIST[515].value, rt_add_i32(rt_add_i32(loc_5, bit_and(rt_shr_u32(loc_4, 18), 768)), 4294967040))
+			rt_store_i32(memory_at_0, GLOBAL_LIST[515].value, rt_add_i32(rt_add_i32(loc_5, bit32.band(rt_shr_u32(loc_4, 18), 768)), 4294967040))
 			break
 		end
 		loc_4 = rt_load_i32(memory_at_0, loc_0 + 40)
 		loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[529].value)
 		loc_6 = rt_shr_i32(loc_4, 31)
-		rt_store_i32(memory_at_0, GLOBAL_LIST[509].value, rt_shr_u32(rt_sub_i32(bit_xor(loc_4, loc_6), loc_6), loc_5))
+		rt_store_i32(memory_at_0, GLOBAL_LIST[509].value, rt_shr_u32(rt_sub_i32(bit32.bxor(loc_4, loc_6), loc_6), loc_5))
 		loc_4 = rt_load_i32(memory_at_0, loc_0 + 44)
 		rt_store_i32(memory_at_0, GLOBAL_LIST[510].value, loc_4)
 		loc_7 = rt_load_i32(memory_at_0, loc_0 + 32)
@@ -64616,7 +64605,7 @@ FUNC_LIST[693] = function(loc_0, loc_1, loc_2)
 					loc_10 = loc_5
 					while true do
 						loc_5 = rt_load_i32_u8(memory_at_0, loc_4 + 1)
-						loc_14 = bit_and(loc_6, 255)
+						loc_14 = bit32.band(loc_6, 255)
 						loc_15 = rt_add_i32(rt_mul_i32(loc_12, loc_14), loc_13)
 						loc_6 = rt_shr_i32(rt_add_i32(loc_15, 65535), 16)
 						rt_store_i32(memory_at_0, GLOBAL_LIST[503].value, loc_6)
@@ -64764,7 +64753,7 @@ FUNC_LIST[694] = function(loc_0)
 			reg_1 = FUNC_LIST[314](loc_3, rt_load_i32(memory_at_0, loc_7))
 			loc_3 = rt_sub_i32(reg_0, reg_1)
 			loc_4 = rt_shr_i32(loc_3, 31)
-			if rt_gt_i32(rt_sub_i32(bit_xor(loc_3, loc_4), loc_4), rt_shl_i32(loc_2, 2)) then
+			if rt_gt_i32(rt_sub_i32(bit32.bxor(loc_3, loc_4), loc_4), rt_shl_i32(loc_2, 2)) then
 				break
 			end
 			loc_4 = GLOBAL_LIST[501].value
@@ -64786,7 +64775,7 @@ FUNC_LIST[694] = function(loc_0)
 			end
 			while true do
 				loc_7 = rt_load_i32(memory_at_0, loc_0 + 40)
-				loc_4 = bit_and(loc_7, 32767)
+				loc_4 = bit32.band(loc_7, 32767)
 				loc_6 = rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[134].value), rt_shl_i32(loc_2, 3))
 				if rt_lt_i32(loc_4, rt_load_i32(memory_at_0, loc_6)) then
 					break
@@ -64794,7 +64783,7 @@ FUNC_LIST[694] = function(loc_0)
 				rt_store_i32(memory_at_0, loc_1 + 4, loc_7)
 				rt_store_i32(memory_at_0, loc_1, loc_2)
 				FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 20303), loc_1)
-				loc_4 = bit_and(rt_load_i32(memory_at_0, loc_0 + 40), 32767)
+				loc_4 = bit32.band(rt_load_i32(memory_at_0, loc_0 + 40), 32767)
 				break
 			end
 			if desired then
@@ -64885,7 +64874,7 @@ FUNC_LIST[694] = function(loc_0)
 			reg_0 = FUNC_LIST[315](65536, loc_5)
 			loc_7 = reg_0
 			while true do
-				if bit_and(loc_6, 255) == 0 then
+				if bit32.band(loc_6, 255) == 0 then
 					break
 				end
 				loc_7 = rt_sub_i32(0, loc_7)
@@ -64917,7 +64906,7 @@ FUNC_LIST[694] = function(loc_0)
 			rt_store_i32(memory_at_0, loc_2 + 48, loc_4)
 			loc_3 = 0
 			while true do
-				if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 106), 4) ~= 0 then
+				if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 106), 4) ~= 0 then
 					break
 				end
 				loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[564].value)
@@ -64925,7 +64914,7 @@ FUNC_LIST[694] = function(loc_0)
 					break
 				end
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 41), 128) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 41), 128) == 0 then
 						break
 					end
 					loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[498].value)
@@ -65058,7 +65047,7 @@ FUNC_LIST[696] = function(loc_0)
 		end
 		while true do
 			loc_5 = rt_load_i32(memory_at_0, loc_3 + 4)
-			loc_3 = bit_and(loc_5, 32767)
+			loc_3 = bit32.band(loc_5, 32767)
 			loc_2 = rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[134].value), rt_shl_i32(loc_4, 3))
 			if rt_lt_i32(loc_3, rt_load_i32(memory_at_0, loc_2)) then
 				break
@@ -65066,7 +65055,7 @@ FUNC_LIST[696] = function(loc_0)
 			rt_store_i32(memory_at_0, loc_1 + 4, loc_5)
 			rt_store_i32(memory_at_0, loc_1, loc_4)
 			FUNC_LIST[278](rt_add_i32(GLOBAL_LIST[1].value, 20303), loc_1)
-			loc_3 = bit_and(rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0) + 4), 32767)
+			loc_3 = bit32.band(rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, loc_0) + 4), 32767)
 			break
 		end
 		loc_4 = rt_add_i32(rt_load_i32(memory_at_0, loc_2 + 4), rt_mul_i32(loc_3, 28))
@@ -65105,7 +65094,7 @@ FUNC_LIST[696] = function(loc_0)
 			loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[551].value)
 			while true do
 				while true do
-					if bit_and(loc_6, 255) ~= 0 then
+					if bit32.band(loc_6, 255) ~= 0 then
 						break
 					end
 					loc_6 = 0
@@ -65130,13 +65119,13 @@ FUNC_LIST[696] = function(loc_0)
 			end
 			rt_store_i32(memory_at_0, loc_1 + 68, loc_4)
 			rt_store_i32(memory_at_0, loc_1 + 60, loc_2)
-			rt_store_i32(memory_at_0, loc_1 + 52, rt_add_i32(loc_6, bit_and(rt_shr_i32(loc_3, 31), rt_mul_i32(loc_2, rt_sub_i32(loc_10, loc_3)))))
+			rt_store_i32(memory_at_0, loc_1 + 52, rt_add_i32(loc_6, bit32.band(rt_shr_i32(loc_3, 31), rt_mul_i32(loc_2, rt_sub_i32(loc_10, loc_3)))))
 			while true do
 				loc_4 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[558].value) + 60)
 				if rt_gt_i32(loc_4, 128) then
 					break
 				end
-				if bit_and(loc_4, 8) ~= 0 then
+				if bit32.band(loc_4, 8) ~= 0 then
 					break
 				end
 				loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[564].value)
@@ -65144,7 +65133,7 @@ FUNC_LIST[696] = function(loc_0)
 					break
 				end
 				while true do
-					if bit_and(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0) + 5), 128) == 0 then
+					if bit32.band(rt_load_i32_u8(memory_at_0, rt_load_i32(memory_at_0, loc_0) + 5), 128) == 0 then
 						break
 					end
 					loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[498].value)
@@ -65344,7 +65333,7 @@ FUNC_LIST[699] = function(loc_0)
 			loc_3 = loc_2
 			while true do
 				loc_4 = rt_sub_i32(loc_1, loc_2)
-				loc_5 = bit_and(rt_add_i32(loc_4, 1), 3)
+				loc_5 = bit32.band(rt_add_i32(loc_4, 1), 3)
 				if loc_5 == 0 then
 					break
 				end
@@ -65475,13 +65464,13 @@ FUNC_LIST[699] = function(loc_0)
 										end
 										break
 									end
-									loc_1 = (if rt_lt_i32(rt_load_i32(memory_at_0, loc_0 + 24), rt_load_i32(memory_at_0, rt_add_i32(loc_3, 4294967276))) then loc_2 else bit_and(loc_2, 4294967294))
+									loc_1 = (if rt_lt_i32(rt_load_i32(memory_at_0, loc_0 + 24), rt_load_i32(memory_at_0, rt_add_i32(loc_3, 4294967276))) then loc_2 else bit32.band(loc_2, 4294967294))
 									if not br_map[1] then
 										br_map[1] = (function()
 											return { [0] = 3, 2, 1, }
 										end)()
 									end
-									temp = br_map[1][rt_add_i32((if rt_gt_i32(rt_load_i32(memory_at_0, loc_0 + 28), rt_load_i32(memory_at_0, rt_add_i32(loc_3, 4294967280))) then loc_1 else bit_and(loc_1, 4294967293)), 4294967295)] or 4
+									temp = br_map[1][rt_add_i32((if rt_gt_i32(rt_load_i32(memory_at_0, loc_0 + 28), rt_load_i32(memory_at_0, rt_add_i32(loc_3, 4294967280))) then loc_1 else bit32.band(loc_1, 4294967293)), 4294967295)] or 4
 									if temp < 3 then
 										if temp < 2 then
 											desired = 6
@@ -65585,7 +65574,7 @@ FUNC_LIST[699] = function(loc_0)
 						loc_2 = rt_add_i32(loc_3, 4294967284)
 						loc_3 = loc_7
 						while true do
-							if bit_and(rt_add_i32(loc_8, loc_7), 1) ~= 0 then
+							if bit32.band(rt_add_i32(loc_8, loc_7), 1) ~= 0 then
 								break
 							end
 							while true do
@@ -65677,7 +65666,7 @@ FUNC_LIST[699] = function(loc_0)
 					loc_2 = rt_add_i32(loc_3, 4294967288)
 					loc_3 = loc_7
 					while true do
-						if bit_and(rt_add_i32(loc_8, loc_7), 1) ~= 0 then
+						if bit32.band(rt_add_i32(loc_8, loc_7), 1) ~= 0 then
 							break
 						end
 						while true do
@@ -65785,7 +65774,7 @@ FUNC_LIST[699] = function(loc_0)
 			loc_5 = rt_load_i32(memory_at_0, GLOBAL_LIST[53].value)
 			loc_3 = loc_2
 			while true do
-				if bit_and(rt_add_i32(loc_1, loc_2), 1) ~= 0 then
+				if bit32.band(rt_add_i32(loc_1, loc_2), 1) ~= 0 then
 					break
 				end
 				while true do
@@ -66408,7 +66397,7 @@ FUNC_LIST[716] = function(loc_0, loc_1)
 			end
 			reg_0 = (if loc_1 == 0 then 1 else 0)
 			loc_1 = rt_load_i32(memory_at_0, loc_0 + 8)
-			if bit_and(reg_0, (if loc_1 == loc_2 then 1 else 0)) ~= 0 then
+			if bit32.band(reg_0, (if loc_1 == loc_2 then 1 else 0)) ~= 0 then
 				break
 			end
 			while true do
@@ -66622,9 +66611,9 @@ FUNC_LIST[720] = function(loc_0)
 						end
 						loc_3 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16342556))
 						loc_2 = rt_load_i32(memory_at_0, loc_3 + 204)
-						rt_store_i32(memory_at_0, loc_3 + 204, bit_xor(loc_2, 2))
+						rt_store_i32(memory_at_0, loc_3 + 204, bit32.bxor(loc_2, 2))
 						while true do
-							if bit_and(loc_2, 2) ~= 0 then
+							if bit32.band(loc_2, 2) ~= 0 then
 								break
 							end
 							while true do
@@ -66801,7 +66790,7 @@ FUNC_LIST[720] = function(loc_0)
 					end
 					while true do
 						while true do
-							if bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[91].value), 4294967291) ~= 0 then
+							if bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[91].value), 4294967291) ~= 0 then
 								break
 							end
 							loc_3 = rt_load_i32_i8(memory_at_0, loc_0 + 8)
@@ -66810,7 +66799,7 @@ FUNC_LIST[720] = function(loc_0)
 								desired = 4
 								break
 							end
-							if bit_and(rt_load_i32(memory_at_0, GLOBAL_LIST[91].value), 4294967291) == 0 then
+							if bit32.band(rt_load_i32(memory_at_0, GLOBAL_LIST[91].value), 4294967291) == 0 then
 								desired = 3
 								break
 							end
@@ -66838,9 +66827,9 @@ FUNC_LIST[720] = function(loc_0)
 					end
 					loc_3 = rt_load_i32(memory_at_0, rt_add_i32(GLOBAL_LIST[1].value, 16342556))
 					loc_2 = rt_load_i32(memory_at_0, loc_3 + 204)
-					rt_store_i32(memory_at_0, loc_3 + 204, bit_xor(loc_2, 1))
+					rt_store_i32(memory_at_0, loc_3 + 204, bit32.bxor(loc_2, 1))
 					while true do
-						if bit_and(loc_2, 1) ~= 0 then
+						if bit32.band(loc_2, 1) ~= 0 then
 							break
 						end
 						rt_store_i32(memory_at_0, loc_3 + 224, rt_add_i32(GLOBAL_LIST[1].value, 7576))
@@ -67950,7 +67939,7 @@ FUNC_LIST[722] = function()
 						break
 					end
 					while true do
-						if bit_and(rt_load_i32_u8(memory_at_0, loc_0 + 204), 2) ~= 0 then
+						if bit32.band(rt_load_i32_u8(memory_at_0, loc_0 + 204), 2) ~= 0 then
 							break
 						end
 						if rt_load_i32(memory_at_0, loc_0 + 52) == 0 then
@@ -68058,8 +68047,8 @@ FUNC_LIST[723] = function()
 		loc_3 = (if loc_2 == 0 then 1 else 0)
 		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16342724), loc_3)
 		loc_4 = (if rt_load_i32(memory_at_0, rt_add_i32(loc_0, 16342536)) ~= 0 then 1 else 0)
-		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16342728), bit_and(loc_3, loc_4))
-		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16342732), bit_and((if loc_2 ~= 0 then 1 else 0), loc_4))
+		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16342728), bit32.band(loc_3, loc_4))
+		rt_store_i32(memory_at_0, rt_add_i32(loc_0, 16342732), bit32.band((if loc_2 ~= 0 then 1 else 0), loc_4))
 		loc_2 = GLOBAL_LIST[13].value
 		loc_0 = rt_load_i32(memory_at_0, loc_1)
 		loc_3 = rt_load_i32(memory_at_0, loc_0 + 108)
@@ -68235,7 +68224,7 @@ FUNC_LIST[725] = function()
 				break
 			end
 			loc_3 = rt_load_i32(memory_at_0, loc_0 + 64)
-			loc_3 = (if rt_lt_i32(loc_3, 129) then bit_and(rt_shr_i32(rt_shl_i32(loc_3, 28), 31), 13) else 13)
+			loc_3 = (if rt_lt_i32(loc_3, 129) then bit32.band(rt_shr_i32(rt_shl_i32(loc_3, 28), 31), 13) else 13)
 			break
 		end
 		while true do
@@ -68260,8 +68249,8 @@ FUNC_LIST[726] = function(loc_0)
 		loc_1 = GLOBAL_LIST[1].value
 		loc_2 = (if rt_load_i32(memory_at_0, rt_add_i32(loc_1, 16342536)) ~= 0 then 1 else 0)
 		loc_3 = rt_load_i32(memory_at_0, GLOBAL_LIST[31].value)
-		rt_store_i32(memory_at_0, rt_add_i32(loc_1, 16342728), bit_and(loc_2, (if loc_3 == 0 then 1 else 0)))
-		rt_store_i32(memory_at_0, rt_add_i32(loc_1, 16342732), bit_and((if loc_3 ~= 0 then 1 else 0), loc_2))
+		rt_store_i32(memory_at_0, rt_add_i32(loc_1, 16342728), bit32.band(loc_2, (if loc_3 == 0 then 1 else 0)))
+		rt_store_i32(memory_at_0, rt_add_i32(loc_1, 16342732), bit32.band((if loc_3 ~= 0 then 1 else 0), loc_2))
 		FUNC_LIST[712](rt_add_i32(loc_1, 16342680), loc_0)
 		loc_2 = rt_add_i32(loc_1, 16342768)
 		FUNC_LIST[712](loc_2, loc_0)
@@ -68332,9 +68321,9 @@ FUNC_LIST[729] = function(loc_0, loc_1)
 	local desired
 	while true do
 		loc_2 = GLOBAL_LIST[1].value
-		rt_store_i32(memory_at_0, rt_add_i32(loc_2, 16342536), bit_or((if loc_0 == 0 then 1 else 0), (if rt_load_i32(memory_at_0, GLOBAL_LIST[11].value) ~= 0 then 1 else 0)))
+		rt_store_i32(memory_at_0, rt_add_i32(loc_2, 16342536), bit32.bor((if loc_0 == 0 then 1 else 0), (if rt_load_i32(memory_at_0, GLOBAL_LIST[11].value) ~= 0 then 1 else 0)))
 		loc_0 = rt_add_i32(loc_2, 16342552)
-		loc_1 = (if bit_or(rt_load_i32(memory_at_0, loc_0), loc_1) ~= 0 then 1 else 0)
+		loc_1 = (if bit32.bor(rt_load_i32(memory_at_0, loc_0), loc_1) ~= 0 then 1 else 0)
 		rt_store_i32(memory_at_0, loc_0, loc_1)
 		while true do
 			while true do
@@ -68374,7 +68363,7 @@ FUNC_LIST[729] = function(loc_0, loc_1)
 				break
 			end
 			loc_2 = rt_load_i32(memory_at_0, loc_0 + 64)
-			loc_2 = (if rt_lt_i32(loc_2, 129) then bit_and(rt_shr_i32(rt_shl_i32(loc_2, 28), 31), 13) else 13)
+			loc_2 = (if rt_lt_i32(loc_2, 129) then bit32.band(rt_shr_i32(rt_shl_i32(loc_2, 28), 31), 13) else 13)
 			break
 		end
 		if desired then
@@ -69276,7 +69265,7 @@ FUNC_LIST[741] = function(loc_0, loc_1, loc_2, loc_3, loc_4, loc_5, loc_6)
 			loc_5 = rt_add_i32(rt_add_i32(loc_7, rt_mul_i32(loc_6, 320)), loc_5)
 			while true do
 				while true do
-					loc_7 = bit_and(loc_4, 3)
+					loc_7 = bit32.band(loc_4, 3)
 					if loc_7 ~= 0 then
 						break
 					end
@@ -69545,11 +69534,11 @@ FUNC_LIST[743] = function(loc_0, loc_1, loc_2)
 								break
 							end
 							loc_0 = rt_add_i32(loc_11, 3)
-							loc_1 = rt_add_i32(loc_8, rt_mul_i32(bit_and(loc_1, 255), 320))
+							loc_1 = rt_add_i32(loc_8, rt_mul_i32(bit32.band(loc_1, 255), 320))
 							loc_5 = 0
 							loc_4 = loc_12
 							while true do
-								loc_6 = bit_and(loc_12, 7)
+								loc_6 = bit32.band(loc_12, 7)
 								if loc_6 == 0 then
 									break
 								end
@@ -69759,7 +69748,7 @@ FUNC_LIST[744] = function(loc_0, loc_1, loc_2)
 			loc_9 = 0
 			while true do
 				while true do
-					loc_10 = rt_add_i32(loc_2, rt_load_i32(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(bit_xor(loc_9, 4294967295), 2))))
+					loc_10 = rt_add_i32(loc_2, rt_load_i32(memory_at_0, rt_add_i32(loc_8, rt_shl_i32(bit32.bxor(loc_9, 4294967295), 2))))
 					loc_1 = rt_load_i32_u8(memory_at_0, loc_10)
 					if loc_1 == 255 then
 						break
@@ -69782,11 +69771,11 @@ FUNC_LIST[744] = function(loc_0, loc_1, loc_2)
 								break
 							end
 							loc_0 = rt_add_i32(loc_10, 3)
-							loc_1 = rt_add_i32(loc_7, rt_mul_i32(bit_and(loc_1, 255), 320))
+							loc_1 = rt_add_i32(loc_7, rt_mul_i32(bit32.band(loc_1, 255), 320))
 							loc_4 = 0
 							loc_3 = loc_11
 							while true do
-								loc_5 = bit_and(loc_11, 7)
+								loc_5 = bit32.band(loc_11, 7)
 								if loc_5 == 0 then
 									break
 								end
@@ -69979,10 +69968,10 @@ FUNC_LIST[746] = function(loc_0, loc_1, loc_2)
 								end
 								break
 							end
-							loc_1 = rt_add_i32(loc_4, rt_mul_i32(bit_and(loc_1, 255), 320))
+							loc_1 = rt_add_i32(loc_4, rt_mul_i32(bit32.band(loc_1, 255), 320))
 							while true do
 								while true do
-									if bit_and(loc_8, 1) ~= 0 then
+									if bit32.band(loc_8, 1) ~= 0 then
 										break
 									end
 									loc_0 = rt_add_i32(loc_7, 3)
@@ -70155,10 +70144,10 @@ FUNC_LIST[747] = function(loc_0, loc_1, loc_2)
 								end
 								break
 							end
-							loc_0 = rt_add_i32(loc_5, rt_mul_i32(bit_and(loc_0, 255), 320))
+							loc_0 = rt_add_i32(loc_5, rt_mul_i32(bit32.band(loc_0, 255), 320))
 							while true do
 								while true do
-									if bit_and(loc_9, 1) ~= 0 then
+									if bit32.band(loc_9, 1) ~= 0 then
 										break
 									end
 									loc_1 = rt_add_i32(loc_8, 3)
@@ -70339,10 +70328,10 @@ FUNC_LIST[748] = function(loc_0, loc_1, loc_2)
 								end
 								break
 							end
-							loc_1 = rt_add_i32(loc_4, rt_mul_i32(bit_and(loc_1, 255), 320))
+							loc_1 = rt_add_i32(loc_4, rt_mul_i32(bit32.band(loc_1, 255), 320))
 							while true do
 								while true do
-									if bit_and(loc_8, 1) ~= 0 then
+									if bit32.band(loc_8, 1) ~= 0 then
 										break
 									end
 									loc_0 = rt_add_i32(loc_7, 3)
@@ -70526,12 +70515,12 @@ FUNC_LIST[749] = function(loc_0, loc_1, loc_2)
 								end
 								break
 							end
-							loc_1 = rt_mul_i32(bit_and(loc_1, 255), 320)
+							loc_1 = rt_mul_i32(bit32.band(loc_1, 255), 320)
 							loc_0 = rt_add_i32(loc_4, loc_1)
 							loc_1 = rt_add_i32(loc_5, loc_1)
 							while true do
 								while true do
-									if bit_and(loc_9, 1) ~= 0 then
+									if bit32.band(loc_9, 1) ~= 0 then
 										break
 									end
 									loc_10 = rt_add_i32(loc_8, 3)
@@ -70719,7 +70708,7 @@ FUNC_LIST[752] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 			loc_0 = rt_add_i32(rt_add_i32(loc_5, rt_mul_i32(loc_1, 320)), loc_0)
 			while true do
 				while true do
-					loc_6 = bit_and(loc_3, 3)
+					loc_6 = bit32.band(loc_3, 3)
 					if loc_6 ~= 0 then
 						break
 					end
@@ -70868,13 +70857,13 @@ FUNC_LIST[753] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 			if rt_lt_i32(loc_2, 1) then
 				break
 			end
-			loc_5 = bit_and(loc_3, 7)
+			loc_5 = bit32.band(loc_3, 7)
 			loc_1 = rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[12].value), rt_mul_i32(loc_1, 320)), loc_0)
 			while true do
 				if loc_3 < 8 then
 					break
 				end
-				loc_6 = bit_and(loc_3, 2147483640)
+				loc_6 = bit32.band(loc_3, 2147483640)
 				loc_0 = 0
 				while true do
 					while true do
@@ -71074,13 +71063,13 @@ FUNC_LIST[755] = function(loc_0, loc_1, loc_2, loc_3)
 			if rt_lt_i32(loc_2, 1) then
 				break
 			end
-			loc_4 = bit_and(loc_2, 7)
+			loc_4 = bit32.band(loc_2, 7)
 			loc_1 = rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[12].value), rt_mul_i32(loc_1, 320)), loc_0)
 			while true do
 				if loc_2 < 8 then
 					break
 				end
-				loc_0 = bit_and(loc_2, 2147483640)
+				loc_0 = bit32.band(loc_2, 2147483640)
 				loc_2 = 0
 				while true do
 					rt_store_i32_n8(memory_at_0, loc_1 + 2240, loc_3)
@@ -71173,7 +71162,7 @@ FUNC_LIST[756] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 			if rt_lt_i32(loc_3, 1) then
 				break
 			end
-			loc_6 = bit_and(loc_3, 7)
+			loc_6 = bit32.band(loc_3, 7)
 			loc_7 = rt_mul_i32(loc_1, 320)
 			loc_1 = rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[12].value), loc_7), loc_0)
 			while true do
@@ -71181,7 +71170,7 @@ FUNC_LIST[756] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 					if loc_3 < 8 then
 						break
 					end
-					loc_8 = bit_and(loc_3, 2147483640)
+					loc_8 = bit32.band(loc_3, 2147483640)
 					loc_5 = 0
 					while true do
 						rt_store_i32_n8(memory_at_0, loc_1 + 2240, loc_4)
@@ -71241,13 +71230,13 @@ FUNC_LIST[756] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 				end
 				break
 			end
-			loc_6 = bit_and(loc_3, 7)
+			loc_6 = bit32.band(loc_3, 7)
 			loc_1 = rt_add_i32(rt_add_i32(rt_add_i32(rt_add_i32(rt_load_i32(memory_at_0, GLOBAL_LIST[12].value), loc_7), loc_0), loc_2), 4294967295)
 			while true do
 				if loc_3 < 8 then
 					break
 				end
-				loc_8 = bit_and(loc_3, 2147483640)
+				loc_8 = bit32.band(loc_3, 2147483640)
 				loc_5 = 0
 				while true do
 					rt_store_i32_n8(memory_at_0, loc_1 + 2240, loc_4)
@@ -71372,8 +71361,8 @@ FUNC_LIST[761] = function(loc_0, loc_1, loc_2, loc_3, loc_4)
 				if loc_6 == 1 then
 					break
 				end
-				loc_8 = bit_and(loc_6, 1)
-				loc_9 = bit_and(loc_6, 2147483646)
+				loc_8 = bit32.band(loc_6, 1)
+				loc_9 = bit32.band(loc_6, 2147483646)
 				loc_6 = 0
 				while true do
 					while true do
@@ -71765,7 +71754,7 @@ FUNC_LIST[763] = function(loc_0)
 						break
 					end
 					loc_2 = rt_load_i32(memory_at_0, GLOBAL_LIST[12].value)
-					loc_9 = rt_mul_i64(rt_bit_and_i64(rt_extend_i64_u32(loc_7), rt_i64_from_u32(255, 0)), rt_i64_from_u32(16843009, 16843009))
+					loc_9 = rt_mul_i64(rt_bit32.band_i64(rt_extend_i64_u32(loc_7), rt_i64_from_u32(255, 0)), rt_i64_from_u32(16843009, 16843009))
 					rt_store_i64(memory_at_0, rt_add_i32(loc_2, 6303), loc_9)
 					rt_store_i64(memory_at_0, rt_add_i32(loc_2, 6295), loc_9)
 					rt_store_i64(memory_at_0, rt_add_i32(loc_2, 6287), loc_9)
@@ -71835,50 +71824,50 @@ FUNC_LIST[764] = function(loc_0)
 			break
 		end
 		reg_0 = FUNC_LIST[46](loc_1)
-		loc_1 = bit_xor(reg_0, 177573)
+		loc_1 = bit32.bxor(reg_0, 177573)
 		while true do
 			loc_2 = rt_load_i32_i8(memory_at_0, loc_0 + 1)
 			if loc_2 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_2)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			loc_2 = rt_load_i32_i8(memory_at_0, loc_0 + 2)
 			if loc_2 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_2)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			loc_2 = rt_load_i32_i8(memory_at_0, loc_0 + 3)
 			if loc_2 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_2)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			loc_2 = rt_load_i32_i8(memory_at_0, loc_0 + 4)
 			if loc_2 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_2)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			loc_2 = rt_load_i32_i8(memory_at_0, loc_0 + 5)
 			if loc_2 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_2)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			loc_2 = rt_load_i32_i8(memory_at_0, loc_0 + 6)
 			if loc_2 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_2)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			loc_0 = rt_load_i32_i8(memory_at_0, loc_0 + 7)
 			if loc_0 == 0 then
 				break
 			end
 			reg_1 = FUNC_LIST[46](loc_0)
-			loc_1 = bit_xor(bit_xor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
+			loc_1 = bit32.bxor(bit32.bxor(rt_shl_i32(loc_1, 5), reg_1), loc_1)
 			break
 		end
 		if desired then
@@ -73262,7 +73251,7 @@ FUNC_LIST[780] = function(loc_0, loc_1, loc_2)
 	while true do
 		loc_3 = rt_sub_i32(GLOBAL_LIST[0].value, 16)
 		GLOBAL_LIST[0].value = loc_3
-		loc_4 = rt_add_i32(bit_and(rt_add_i32(loc_0, 3), 4294967292), 24)
+		loc_4 = rt_add_i32(bit32.band(rt_add_i32(loc_0, 3), 4294967292), 24)
 		loc_0 = rt_load_i32(memory_at_0, rt_load_i32(memory_at_0, GLOBAL_LIST[718].value) + 28)
 		loc_5 = rt_load_i32(memory_at_0, loc_0 + 20)
 		loc_0 = (if rt_load_i32(memory_at_0, loc_5 + 8) == 4 then loc_5 else loc_0)
@@ -75883,7 +75872,7 @@ return function(wasm)
                 f32_f64 = no_op,
             },
             bnot = {
-                i64 = rt_bit_not_i64,
+                i64 = rt_bit32.bnot_i64,
             },
             allocator = {
                 grow = rt_allocator_grow,
@@ -75947,28 +75936,28 @@ return function(wasm)
                 i64_f64 = rt_truncate_i64_f64,
             },
             bor = {
-                i64 = rt_bit_or_i64,
+                i64 = rt_bit32.bor_i64,
             },
             shl = {
                 i32 = rt_shl_i32,
                 i64 = rt_shl_i64,
             },
             bxor = {
-                i64 = rt_bit_xor_i64,
+                i64 = rt_bit32.bxor_i64,
             },
             nearest = {
                 f64 = rt_nearest_f32,
                 f32 = rt_nearest_f32,
             },
             i64 = {
-                bit_not = rt_bit_not_i64,
+                bit32.bnot = rt_bit32.bnot_i64,
                 ONE = rt_i64_ONE,
                 multiply = rt_mul_i64,
                 divide_signed = rt_div_i64,
                 into_u64 = rt_convert_f64_u64,
                 ZERO = rt_i64_ZERO,
                 from_u32 = rt_i64_from_u32,
-                bit_and = rt_bit_and_i64,
+                bit32.band = rt_bit32.band_i64,
                 is_zero = rt_i64_is_zero,
                 is_less_signed = rt_lt_i64,
                 is_negative = rt_i64_is_negative,
@@ -75985,9 +75974,9 @@ return function(wasm)
                 from_u64 = rt_i64_from_u64,
                 shift_left = rt_shl_i64,
                 subtract = rt_sub_i64,
-                bit_or = rt_bit_or_i64,
+                bit32.bor = rt_bit32.bor_i64,
                 is_greater_unsigned = rt_gt_u64,
-                bit_xor = rt_bit_xor_i64,
+                bit32.bxor = rt_bit32.bxor_i64,
                 add = rt_add_i64,
             },
             popcnt = {
@@ -75995,7 +75984,7 @@ return function(wasm)
                 i64 = rt_popcnt_i64,
             },
             band = {
-                i64 = rt_bit_and_i64,
+                i64 = rt_bit32.band_i64,
             },
             le = {
                 i32 = rt_le_i32,
